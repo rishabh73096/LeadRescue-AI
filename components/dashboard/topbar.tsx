@@ -13,6 +13,7 @@ import { useRole } from "@/hooks/use-role";
 import { ROLE_LABELS } from "@/lib/roles";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import type { NavArea } from "@/config/navigation";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { notify } from "@/lib/toast";
 import { BRAND } from "@/config/site";
 import type { DashboardData } from "@/types/dashboard";
@@ -22,6 +23,8 @@ export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse, ar
   const router = useRouter();
   const { user, signOut, refresh } = useAuthState();
   const [account, setAccount] = useState(false);
+  const [confirmOut, setConfirmOut] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [mobileSearch, setMobileSearch] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   useEscapeKey(() => setAccount(false), account);
@@ -49,7 +52,20 @@ export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse, ar
   const { role } = useRole();
   const roleLabel = isAdminArea ? "Platform admin" : ROLE_LABELS[role];
 
+  const logout = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      notify.success("Signed out");
+      router.replace(isAdminArea ? "/admin/login" : "/login");
+    } finally {
+      setSigningOut(false);
+      setConfirmOut(false);
+    }
+  };
+
   return (
+    <>
     <header className="sticky top-0 z-50 flex h-[66px] items-center gap-3 bg-[#0b1026] px-4 text-white sm:gap-5 sm:px-6">
       <button type="button" onClick={onMenu} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} aria-controls="dashboard-sidebar" className="-ml-1 flex size-9 items-center justify-center rounded-lg hover:bg-white/10 lg:hidden">
         {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -104,7 +120,7 @@ export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse, ar
               <div className="fixed inset-0 z-10" onClick={() => setAccount(false)} aria-hidden />
               <div role="menu" className="animate-in fade-in zoom-in-95 slide-in-from-top-1 absolute right-0 z-20 mt-2 w-52 origin-top-right overflow-hidden rounded-xl bg-white py-1 text-sm text-slate-700 shadow-xl ring-1 ring-slate-100 duration-150">
                                 {user ? (
-                  <button type="button" role="menuitem" onClick={() => { signOut(); setAccount(false); }} className="flex w-full items-center gap-2 px-4 py-2.5 hover:bg-slate-50">
+                  <button type="button" role="menuitem" onClick={() => { setAccount(false); setConfirmOut(true); }} className="flex w-full items-center gap-2 px-4 py-2.5 hover:bg-slate-50">
                     <LogOut className="size-4" /> Sign out
                   </button>
                 ) : (
@@ -123,5 +139,18 @@ export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse, ar
         </div>
       ) : null}
     </header>
+    <ConfirmationModal
+      open={confirmOut}
+      variant="warning"
+      icon={<LogOut className="size-6" />}
+      title="Sign out?"
+      description={isAdminArea ? "You will need to sign in again to use the admin console." : "You will need to sign in again to see your leads."}
+      confirmText="Yes, sign out"
+      cancelText="No, stay"
+      loading={signingOut}
+      onConfirm={logout}
+      onCancel={() => setConfirmOut(false)}
+    />
+    </>
   );
 }

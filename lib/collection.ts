@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { registerLocalKey } from "@/lib/local-store";
+import { withRetry } from "@/lib/network";
 import { notify } from "@/lib/toast";
 import { createClient } from "@/utils/supabase/client";
 
@@ -88,7 +89,7 @@ export function createCollection<T extends { id: string }>(o: Options<T>) {
   async function load() {
     userId = await currentUserId();
     if (userId) {
-      const { data, error } = await createClient().from(o.table).select("*");
+      const { data, error } = await withRetry(() => createClient().from(o.table).select("*"), (r) => Boolean(r.error) && typeof navigator !== "undefined" && navigator.onLine);
       if (!error) {
         remote = true;
         commit((data as Row[]).map(o.fromRow));

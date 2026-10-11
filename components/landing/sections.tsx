@@ -3,7 +3,7 @@ import { ArrowDown, ArrowRight, Check, ChevronDown, FileSpreadsheet, Globe, Mail
 import { BRAND } from "@/config/site";
 import { Logo } from "@/components/ui/logo";
 import { LogoMark } from "@/components/ui/logo-mark";
-import { FlowDemo } from "@/components/landing/flow-demo";
+import { LazyFlowDemo } from "@/components/landing/lazy-flow-demo";
 import { CountStat, HeroConverge, LanguageSwap, MethodFeed, SendDemo, StageTracker, StatusCycle, TeamAvatars, Twinkle } from "@/components/landing/bento-visuals";
 import { HeroTile, HoverLift, PopIcon, PressLink, WaveBars } from "@/components/landing/interactive";
 import { Float, Reveal } from "@/components/ui/motion";
@@ -38,7 +38,7 @@ export function Hero({ c }: { c: LandingContent }) {
   const tilt = [-7, 6, -5, 8];
   return (
     <section className="px-5 pt-16 pb-20 text-center sm:pt-24">
-      <h1 className="font-inter mx-auto max-w-[1100px] text-[clamp(2.9rem,9.6vw,7.4rem)] leading-[0.98] font-extrabold tracking-[-0.055em] text-ink">
+      <h1 className="font-inter mx-auto max-w-[1100px] text-[clamp(2rem,8.4vw,7.4rem)] leading-[0.98] font-extrabold tracking-[-0.055em] text-ink">
         {c.headline.map((line, li) => (
           <Reveal as="span" key={li} y={34} delay={li * 0.12} className={cn("block", line.muted && "bg-linear-to-b from-[#1a1a1a] to-[#9a9aa0] bg-clip-text text-transparent")}>
             {line.text}
@@ -73,7 +73,7 @@ export function HowItWorks({ c }: { c: LandingContent }) {
         <h2 className="font-inter text-4xl font-extrabold tracking-[-0.04em] text-ink sm:text-5xl">{c.flow.title}</h2>
         <p className="mt-4 text-lg leading-8 text-slate-500">{c.flow.sub}</p>
       </Reveal>
-      <Reveal delay={0.1}><FlowDemo /></Reveal>
+      <Reveal delay={0.1}><LazyFlowDemo /></Reveal>
     </section>
   );
 }

@@ -332,3 +332,6 @@
 @keyframes row-expand { from { grid-template-rows: 0fr; opacity: 0; transform: translateX(-16px); } to { grid-template-rows: 1fr; opacity: 1; transform: none; } }
 .row-expand { display: grid; animation: row-expand 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
 @media (prefers-reduced-motion: reduce) { .row-expand { animation: none; } }
+
+/* Lite mode (slow connection or Data Saver): no endless decorative animation */
+html[data-lite] .wave-bar, html[data-lite] .flow-line, html[data-lite] .tile-float, html[data-lite] .dot-ping::after, html[data-lite] .marquee-scroll { animation: none; }

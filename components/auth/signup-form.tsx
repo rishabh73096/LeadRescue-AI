@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Mail } from "lucide-react";
 import * as authService from "@/services/auth";
@@ -12,7 +11,6 @@ import { DEFAULT_SIGNUP_ROLE } from "@/config/auth";
 import { BRAND } from "@/config/site";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AuthCard, AuthHeading } from "@/components/auth/auth-card";
 import { AuthTabs } from "@/components/auth/auth-tabs";
 import { AuthField, AuthInput, AuthPasswordInput } from "@/components/auth/auth-field";
