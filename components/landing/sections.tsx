@@ -4,6 +4,7 @@ import { BRAND } from "@/config/site";
 import { Logo } from "@/components/ui/logo";
 import { LogoMark } from "@/components/ui/logo-mark";
 import { FlowDemo } from "@/components/landing/flow-demo";
+import { CountStat, HeroConverge, LanguageSwap, MethodFeed, SendDemo, StageTracker, StatusCycle, TeamAvatars, Twinkle } from "@/components/landing/bento-visuals";
 import { HeroTile, HoverLift, PopIcon, PressLink, WaveBars } from "@/components/landing/interactive";
 import { Float, Reveal } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
@@ -90,74 +91,47 @@ function BentoCard({ item, className, index }: { item: BentoItem; className?: st
       {item.type === "hero" ? (
         <>
           {head}
-          <div className="mt-auto">
-            <div className="flex flex-wrap gap-2.5">
-              {item.chips.map((Ic, i) => (
-                <PopIcon key={i} className={cn("flex size-11 cursor-pointer items-center justify-center rounded-xl", i === 0 ? "bg-brand text-white" : i === 1 ? "bg-ink text-white" : "bg-white text-ink shadow-sm")}>
-                  <Ic className="size-5" />
-                </PopIcon>
-              ))}
-            </div>
-            <div className="mt-6 flex items-end gap-3">
-              <span className="font-inter text-7xl leading-none font-extrabold tracking-[-0.05em] text-ink">{item.stat.value}</span>
-              <span className="pb-1.5 text-xs text-slate-500">{item.stat.label}</span>
-            </div>
-          </div>
+          <HeroConverge stat={item.stat} />
         </>
       ) : item.type === "mock" ? (
         <>
           {head}
-          <div className="flex gap-2">
-            {item.blocks.map((b) => (
-              <div key={b.label} style={{ flexGrow: b.grow }} className="relative h-24 basis-0 rounded-xl bg-[repeating-linear-gradient(135deg,#ececee_0_8px,#f6f6f7_8px_16px)]">
-                <span className="absolute bottom-2 left-2 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700 shadow-sm">{b.label}</span>
-              </div>
-            ))}
-          </div>
+          {item.blocks.some((b) => b.label === "EN") ? <LanguageSwap /> : <StageTracker blocks={item.blocks} />}
         </>
       ) : item.type === "stat" ? (
         <>
-          <span className={cn("font-inter text-6xl leading-none font-extrabold tracking-[-0.05em]", dark ? "text-white" : "text-ink")}>{item.value}</span>
+          <CountStat value={item.value} dark={dark} />
           {head}
         </>
       ) : item.type === "chips" ? (
         <>
           {head}
-          <div className="flex flex-wrap gap-2">
-            {item.chips.map(({ icon: Ic, label }) => (
-              <PopIcon key={label} className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-ink shadow-sm"><Ic className="size-3.5 text-brand" />{label}</PopIcon>
-            ))}
-          </div>
+          <MethodFeed labels={item.chips.map((c) => c.label)} />
         </>
       ) : item.type === "wave" ? (
         <>
-          <span className="flex size-10 items-center justify-center rounded-xl bg-white text-ink shadow-sm"><item.icon className="size-4" /></span>
+          <span className="flex size-10 items-center justify-center rounded-xl bg-white text-ink shadow-sm"><Twinkle><item.icon className="size-4" /></Twinkle></span>
           <WaveBars className="flex h-10 items-center gap-1" heights={[40, 70, 100, 55, 85, 45, 90, 60, 30, 75, 50, 95, 35]} />
           {head}
         </>
       ) : item.type === "icon" ? (
         <>
-          <span className="flex size-10 items-center justify-center rounded-xl bg-white text-ink shadow-sm"><item.icon className="size-4" /></span>
+          <SendDemo />
           {head}
         </>
       ) : item.type === "pills" ? (
         <>
           {head}
-          <div className="flex flex-wrap gap-2">
-            {item.pills.map((p, i) => (
-              <PopIcon key={p.label} className={cn("inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold", i === 0 ? "bg-ink text-white" : "bg-white text-slate-700 shadow-sm")}>
-                <span className="size-1.5 rounded-full" style={{ background: p.color }} />{p.label}
-              </PopIcon>
-            ))}
-          </div>
+          <StatusCycle pills={item.pills} />
         </>
       ) : (
         <div className="flex items-center gap-4">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white text-ink shadow-sm"><item.icon className="size-5" /></span>
+          <PopIcon className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white text-ink shadow-sm"><item.icon className="size-5" /></PopIcon>
           <div>
             <h3 className="text-[17px] font-bold text-ink">{item.title}</h3>
             <p className="mt-0.5 text-[13px] text-slate-500">{item.desc}</p>
           </div>
+          <TeamAvatars className="ml-auto hidden sm:flex" />
         </div>
       )}
     </HoverLift>

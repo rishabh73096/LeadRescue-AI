@@ -20,6 +20,7 @@ const INCOMING: { name: string; text: string }[][] = [
 ];
 
 const MAX_ROWS = 5;
+const ROW_H = 68; // slot height in px, including the gap between rows
 const TRAVEL_SECONDS = 1.5;
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const EASE = [0.4, 0, 0.2, 1] as const;
@@ -34,7 +35,7 @@ export function FlowDemo() {
   const paths = useRef<(SVGPathElement | null)[]>([]);
   const dot = useRef<HTMLSpanElement>(null);
 
-  const [rows, setRows] = useState<Row[]>(() => panel.rows.map((r) => ({ id: r.name, ...r })));
+  const [rows, setRows] = useState<Row[]>(() => panel.rows.slice(0, 1).map((r) => ({ id: r.name, ...r }))); // starts with a single lead
   const [active, setActive] = useState<number | null>(null);
   const [wave, setWave] = useState<{ key: number; source: number } | null>(null);
   const [added, setAdded] = useState(0);
@@ -87,7 +88,7 @@ export function FlowDemo() {
         await travel(src);
         if (cancelled) return;
         const id = `${lead.name}-${cycle}`;
-        setRows((prev) => [{ id, name: lead.name, text: lead.text, source: src, fresh: true }, ...prev].slice(0, MAX_ROWS));
+        setRows((prev) => [{ id, name: lead.name, text: lead.text, source: src, fresh: true }, ...prev].slice(0, MAX_ROWS + 1));
         setWave({ key: cycle, source: src });
         setAdded((a) => a + 1);
         setActive(null);
@@ -225,29 +226,31 @@ export function FlowDemo() {
           <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-5 py-3 text-xs text-slate-600">
             <Pin className="size-3.5 text-slate-400" /> <span className="truncate"><b className="text-ink">Pinned</b> · {panel.pinned}</span>
           </div>
-          <ul className="flex flex-1 flex-col gap-1 overflow-hidden px-4 py-3">
-            <AnimatePresence initial={false}>
-              {rows.map((r) => {
+          <div className="flex flex-1 items-start px-4 py-4">
+            {/* Fixed slots: every row sits ROW_H apart, whether there is 1 lead or 5. Rows slide down by one slot when a new lead lands. */}
+            <ul className="relative w-full" style={{ height: MAX_ROWS * ROW_H }}>
+              {rows.map((r, idx) => {
                 const src = sources[r.source];
                 const isSel = selected === r.id;
+                const overflow = idx >= MAX_ROWS;
                 return (
                   <m.li
                     key={r.id}
-                    initial={{ opacity: 0, height: 0, x: -28 }}
-                    animate={{ opacity: 1, height: "auto", x: 0 }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    className="overflow-hidden"
+                    initial={{ y: idx * ROW_H - ROW_H * 0.6, opacity: 0, scale: 0.96 }}
+                    animate={{ y: idx * ROW_H, opacity: overflow ? 0 : 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 26, opacity: { duration: 0.35 } }}
+                    className="absolute inset-x-0 top-0"
+                    style={{ height: ROW_H - 8, pointerEvents: overflow ? "none" : "auto" }}
                   >
                     <m.button
                       type="button"
                       onClick={() => pick(r)}
                       aria-pressed={isSel}
-                      initial={r.fresh ? { backgroundColor: `${src.color}26` } : false}
+                      initial={r.fresh ? { backgroundColor: `${src.color}30` } : false}
                       animate={{ backgroundColor: isSel ? "#f1f5f9" : "#ffffff00" }}
                       transition={{ duration: 1.6 }}
                       whileTap={{ scale: 0.98 }}
-                      className={cn("group flex w-full cursor-pointer items-center gap-3 rounded-xl px-2 py-3.5 text-left transition-colors duration-150 hover:bg-slate-50", isSel && "ring-1 ring-slate-200")}
+                      className={cn("group flex h-full w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left transition-colors duration-150 hover:bg-slate-50", isSel && "ring-1 ring-slate-200")}
                     >
                       <span className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand transition-transform duration-200 group-hover:scale-110">
                         {r.name.slice(0, 2).toUpperCase()}
@@ -256,7 +259,7 @@ export function FlowDemo() {
                         </span>
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-ink">{r.name}</p>
+                        <p className="truncate text-sm font-bold text-ink">{r.name}</p>
                         <p className="truncate text-sm text-slate-600">{r.text}</p>
                       </div>
                       {r.replied ? (
@@ -266,8 +269,8 @@ export function FlowDemo() {
                   </m.li>
                 );
               })}
-            </AnimatePresence>
-          </ul>
+            </ul>
+          </div>
           <div className="flex items-center gap-2 border-t border-slate-100 p-3">
             <div className="min-h-11 flex-1 rounded-xl bg-slate-100 px-4 py-3 text-sm leading-snug">
               {draft ? <span className="text-ink">{draft}<span className="ml-px inline-block h-4 w-px translate-y-0.5 animate-pulse bg-slate-400" /></span> : <span className="text-slate-400">{selected ? "" : panel.placeholder}</span>}
