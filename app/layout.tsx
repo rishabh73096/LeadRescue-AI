@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { MotionProvider } from "@/components/providers/motion-provider";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
-import { BRAND, SITE_URL } from "@/config/site";
+import { BRAND, SEO, SITE_URL } from "@/config/site";
 
 const averiaSans = Averia_Sans_Libre({
   variable: "--font-averia-sans",
@@ -42,14 +42,23 @@ export const metadata: Metadata = {
     default: BRAND.appTitle,
     template: `%s · ${BRAND.name}`,
   },
-  description: `${BRAND.name} app`,
+  description: SEO.description,
+  applicationName: BRAND.name,
+  authors: [{ name: BRAND.name, url: SITE_URL }],
+  creator: BRAND.name,
+  publisher: BRAND.name,
+  category: "business",
+  formatDetection: { telephone: false, email: false, address: false },
+  // The app itself is private; public pages opt in to indexing individually.
   robots: { index: false, follow: false },
+  openGraph: { type: "website", siteName: BRAND.name, locale: SEO.locale, url: SITE_URL, title: SEO.title, description: SEO.description },
+  twitter: { card: "summary_large_image", title: SEO.title, description: SEO.description },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      lang="en"
+      lang="en-IN"
       suppressHydrationWarning
       className={`${averiaSans.variable} ${averiaSerif.variable} ${montserrat.variable} ${inter.variable} h-full antialiased`}
     >

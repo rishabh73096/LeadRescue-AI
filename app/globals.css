@@ -274,3 +274,22 @@
   --viz-muted: #c3c2b7;
   --viz-bad: #d03b3b;
 }
+
+/* Landing page micro-interactions */
+@keyframes wave-bar {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+@keyframes flow-dash {
+  to { stroke-dashoffset: -8; }
+}
+.wave-bar {
+  transform-origin: center;
+  animation: wave-bar 1.2s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.13s);
+}
+.group:hover .wave-bar { animation-duration: 0.55s; }
+.flow-line { animation: flow-dash 0.9s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .wave-bar, .flow-line { animation: none; }
+}

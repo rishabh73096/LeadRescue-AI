@@ -4,11 +4,13 @@ import { BRAND } from "@/config/site";
 import { Logo } from "@/components/ui/logo";
 import { LogoMark } from "@/components/ui/logo-mark";
 import { FlowDemo } from "@/components/landing/flow-demo";
+import { HeroTile, HoverLift, PopIcon, PressLink, WaveBars } from "@/components/landing/interactive";
+import { Float, Reveal } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 import type { BentoItem, LandingContent } from "@/types/landing";
 
 const wrap = "mx-auto w-full max-w-[1120px] px-5 sm:px-8";
-const btnDark = "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-7 text-[15px] font-semibold text-white transition-transform hover:scale-[1.03]";
+const btnDark = "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-7 text-[15px] font-semibold text-white transition-colors";
 const btnLight = "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#f1f1f2] px-7 text-[15px] font-semibold text-ink transition-colors hover:bg-[#e8e8ea]";
 
 export function LandingNav() {
@@ -19,12 +21,12 @@ export function LandingNav() {
         <Logo />
         <nav className="hidden gap-6 md:flex">
           {links.map(([label, href]) => (
-            <Link key={href} href={href} className="text-sm text-slate-600 hover:text-ink">{label}</Link>
+            <Link key={href} href={href} className="relative text-sm text-slate-600 transition-colors after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-200 hover:text-ink hover:after:scale-x-100">{label}</Link>
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <Link href="/login" className="hidden h-10 items-center rounded-full px-4 text-sm font-semibold text-slate-700 hover:text-ink sm:inline-flex">Sign in</Link>
-          <Link href="/signup" className="inline-flex h-10 items-center rounded-full bg-[#f1f1f2] px-5 text-sm font-semibold text-ink hover:bg-[#e8e8ea]">Get started</Link>
+          <PressLink href="/login" hover={1.05} className="hidden h-10 items-center rounded-full px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-ink sm:inline-flex">Sign in</PressLink>
+          <PressLink href="/signup" className="inline-flex h-10 items-center rounded-full bg-[#f1f1f2] px-5 text-sm font-semibold text-ink hover:bg-[#e8e8ea]">Get started</PressLink>
         </div>
       </div>
     </header>
@@ -37,27 +39,28 @@ export function Hero({ c }: { c: LandingContent }) {
     <section className="px-5 pt-16 pb-20 text-center sm:pt-24">
       <h1 className="font-inter mx-auto max-w-[1100px] text-[clamp(2.9rem,9.6vw,7.4rem)] leading-[0.98] font-extrabold tracking-[-0.055em] text-ink">
         {c.headline.map((line, li) => (
-          <span key={li} className={cn("block", line.muted && "bg-linear-to-b from-[#1a1a1a] to-[#9a9aa0] bg-clip-text text-transparent")}>
+          <Reveal as="span" key={li} y={34} delay={li * 0.12} className={cn("block", line.muted && "bg-linear-to-b from-[#1a1a1a] to-[#9a9aa0] bg-clip-text text-transparent")}>
             {line.text}
             {line.tiles?.map((t, ti) => (
-              <span
+              <HeroTile
                 key={ti}
-                aria-hidden
-                className="mx-[0.06em] inline-flex size-[0.92em] items-center justify-center rounded-[26%] align-[-0.12em] shadow-[0_10px_24px_-10px_rgba(0,0,0,0.35)] transition-transform duration-300 hover:rotate-0 hover:scale-110 first:ml-[0.14em]"
-                style={{ background: t.bg, color: t.fg ?? "#fff", transform: `rotate(${tilt[(li * 2 + ti) % 4]}deg)` }}
+                tilt={tilt[(li * 2 + ti) % 4]}
+                phase={li * 2 + ti}
+                className="mx-[0.06em] inline-flex size-[0.92em] cursor-pointer items-center justify-center rounded-[26%] shadow-[0_10px_24px_-10px_rgba(0,0,0,0.35)] first:ml-[0.14em]"
+                style={{ background: t.bg, color: t.fg ?? "#fff" }}
               >
                 <t.icon className="size-[52%]" strokeWidth={2.2} />
-              </span>
+              </HeroTile>
             ))}
-          </span>
+          </Reveal>
         ))}
       </h1>
-      <p className="mx-auto mt-10 max-w-[620px] text-lg leading-8 text-slate-500 sm:text-xl">{c.subhead}</p>
-      <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-        <Link href="/signup" className={btnDark}>Start free</Link>
-        <a href="#how" className={btnLight}>See how it works <ArrowDown className="size-4" /></a>
-      </div>
-      <p className="mt-5 text-sm text-slate-400">{c.heroNote}</p>
+      <Reveal as="p" delay={0.35} className="mx-auto mt-10 max-w-[620px] text-lg leading-8 text-slate-500 sm:text-xl">{c.subhead}</Reveal>
+      <Reveal delay={0.45} className="mt-9 flex flex-wrap items-center justify-center gap-3">
+        <PressLink href="/signup" className={cn(btnDark, "group")}>Start free</PressLink>
+        <PressLink href="/#how" className={cn(btnLight, "group")}>See how it works <ArrowDown className="size-4 transition-transform group-hover:translate-y-0.5" /></PressLink>
+      </Reveal>
+      <Reveal as="p" delay={0.55} className="mt-5 text-sm text-slate-400">{c.heroNote}</Reveal>
     </section>
   );
 }
@@ -65,16 +68,16 @@ export function Hero({ c }: { c: LandingContent }) {
 export function HowItWorks({ c }: { c: LandingContent }) {
   return (
     <section id="how" className={cn(wrap, "max-w-[1240px] scroll-mt-20 py-16")}>
-      <div className="mx-auto mb-12 max-w-[640px] text-center">
+      <Reveal className="mx-auto mb-12 max-w-[640px] text-center">
         <h2 className="font-inter text-4xl font-extrabold tracking-[-0.04em] text-ink sm:text-5xl">{c.flow.title}</h2>
         <p className="mt-4 text-lg leading-8 text-slate-500">{c.flow.sub}</p>
-      </div>
-      <FlowDemo flow={c.flow} />
+      </Reveal>
+      <Reveal delay={0.1}><FlowDemo /></Reveal>
     </section>
   );
 }
 
-function BentoCard({ item, className }: { item: BentoItem; className?: string }) {
+function BentoCard({ item, className, index }: { item: BentoItem; className?: string; index: number }) {
   const dark = item.type === "stat" && item.dark;
   const head = (
     <div>
@@ -83,16 +86,16 @@ function BentoCard({ item, className }: { item: BentoItem; className?: string })
     </div>
   );
   return (
-    <div className={cn("flex flex-col justify-between gap-6 rounded-3xl p-6", dark ? "bg-ink" : "bg-[#f4f4f5]", className)}>
+    <HoverLift delay={(index % 4) * 0.06} className={cn("group flex cursor-default flex-col justify-between gap-6 rounded-3xl p-6 transition-shadow duration-300 hover:shadow-[0_18px_40px_-20px_rgba(15,17,41,0.25)]", dark ? "bg-ink" : "bg-[#f4f4f5]", className)}>
       {item.type === "hero" ? (
         <>
           {head}
           <div className="mt-auto">
             <div className="flex flex-wrap gap-2.5">
               {item.chips.map((Ic, i) => (
-                <span key={i} className={cn("flex size-11 items-center justify-center rounded-xl", i === 0 ? "bg-brand text-white" : i === 1 ? "bg-ink text-white" : "bg-white text-ink shadow-sm")}>
+                <PopIcon key={i} className={cn("flex size-11 cursor-pointer items-center justify-center rounded-xl", i === 0 ? "bg-brand text-white" : i === 1 ? "bg-ink text-white" : "bg-white text-ink shadow-sm")}>
                   <Ic className="size-5" />
-                </span>
+                </PopIcon>
               ))}
             </div>
             <div className="mt-6 flex items-end gap-3">
@@ -122,16 +125,14 @@ function BentoCard({ item, className }: { item: BentoItem; className?: string })
           {head}
           <div className="flex flex-wrap gap-2">
             {item.chips.map(({ icon: Ic, label }) => (
-              <span key={label} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-ink shadow-sm"><Ic className="size-3.5 text-brand" />{label}</span>
+              <PopIcon key={label} className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-ink shadow-sm"><Ic className="size-3.5 text-brand" />{label}</PopIcon>
             ))}
           </div>
         </>
       ) : item.type === "wave" ? (
         <>
           <span className="flex size-10 items-center justify-center rounded-xl bg-white text-ink shadow-sm"><item.icon className="size-4" /></span>
-          <div className="flex h-10 items-center gap-1" aria-hidden>
-            {[40, 70, 100, 55, 85, 45, 90, 60, 30, 75, 50, 95, 35].map((h, i) => <span key={i} className="w-[5px] rounded-full bg-ink" style={{ height: `${h}%` }} />)}
-          </div>
+          <WaveBars className="flex h-10 items-center gap-1" heights={[40, 70, 100, 55, 85, 45, 90, 60, 30, 75, 50, 95, 35]} />
           {head}
         </>
       ) : item.type === "icon" ? (
@@ -144,9 +145,9 @@ function BentoCard({ item, className }: { item: BentoItem; className?: string })
           {head}
           <div className="flex flex-wrap gap-2">
             {item.pills.map((p, i) => (
-              <span key={p.label} className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold", i === 0 ? "bg-ink text-white" : "bg-white text-slate-700 shadow-sm")}>
+              <PopIcon key={p.label} className={cn("inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold", i === 0 ? "bg-ink text-white" : "bg-white text-slate-700 shadow-sm")}>
                 <span className="size-1.5 rounded-full" style={{ background: p.color }} />{p.label}
-              </span>
+              </PopIcon>
             ))}
           </div>
         </>
@@ -159,7 +160,7 @@ function BentoCard({ item, className }: { item: BentoItem; className?: string })
           </div>
         </div>
       )}
-    </div>
+    </HoverLift>
   );
 }
 
@@ -170,12 +171,12 @@ const BENTO_SPANS = [
 export function Bento({ c }: { c: LandingContent }) {
   return (
     <section id="features" className={cn(wrap, "scroll-mt-20 py-16")}>
-      <div className="mx-auto mb-12 max-w-[640px] text-center">
+      <Reveal className="mx-auto mb-12 max-w-[640px] text-center">
         <h2 className="font-inter text-4xl font-extrabold tracking-[-0.04em] text-ink sm:text-5xl">{c.bento.title}</h2>
         <p className="mt-4 text-lg leading-8 text-slate-500">{c.bento.sub}</p>
-      </div>
+      </Reveal>
       <div className="grid gap-3 md:grid-cols-12">
-        {c.bento.items.map((item, i) => <BentoCard key={item.title} item={item} className={BENTO_SPANS[i]} />)}
+        {c.bento.items.map((item, i) => <BentoCard key={item.title} item={item} index={i} className={BENTO_SPANS[i]} />)}
       </div>
     </section>
   );
@@ -185,17 +186,19 @@ export function Audience({ c }: { c: LandingContent }) {
   const a = c.audience;
   return (
     <section className={cn(wrap, "py-16")}>
-      <div className="mx-auto mb-12 text-center">
+      <Reveal className="mx-auto mb-12 text-center">
         <p className="text-xs text-slate-400">{a.eyebrow}</p>
         <h2 className="font-inter mt-3 text-4xl font-extrabold tracking-[-0.045em] text-ink sm:text-5xl">{a.title}<br /><span className="text-slate-400">{a.titleMuted}</span></h2>
-      </div>
+      </Reveal>
       <div className="grid gap-3 md:grid-cols-3">
-        {a.cards.map((card) => (
-          <figure key={card.who} className="flex flex-col gap-5 rounded-3xl bg-[#f4f4f5] p-6">
-            <span className="flex size-11 items-center justify-center rounded-xl bg-brand text-white"><card.icon className="size-5" /></span>
+        {a.cards.map((card, i) => (
+          <HoverLift key={card.who} delay={i * 0.08}>
+          <figure className="group flex h-full flex-col gap-5 rounded-3xl bg-[#f4f4f5] p-6 transition-shadow duration-300 hover:shadow-[0_18px_40px_-20px_rgba(15,17,41,0.25)]">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-brand text-white transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110"><card.icon className="size-5" /></span>
             <blockquote className="text-[15px] leading-7 text-ink">{card.scenario}</blockquote>
             <figcaption className="mt-auto text-sm"><b className="text-ink">{card.who}</b><span className="block text-xs text-slate-500">{card.role}</span></figcaption>
           </figure>
+          </HoverLift>
         ))}
       </div>
       <p className="mt-4 text-center text-xs text-slate-400">Illustrative scenarios, not customer reviews.</p>
@@ -207,23 +210,23 @@ export function Pricing({ c }: { c: LandingContent }) {
   const p = c.pricing;
   return (
     <section id="pricing" className={cn(wrap, "scroll-mt-20 py-16")}>
-      <div className="mx-auto mb-12 max-w-[560px] text-center">
+      <Reveal className="mx-auto mb-12 max-w-[560px] text-center">
         <h2 className="font-inter text-4xl font-extrabold tracking-[-0.04em] text-ink sm:text-6xl">{p.title}</h2>
         <p className="mt-4 text-slate-500">{p.sub}</p>
-      </div>
+      </Reveal>
       <div className={cn("mx-auto grid gap-3", p.plans.length === 3 ? "max-w-[960px] md:grid-cols-3" : "max-w-[700px] md:grid-cols-2")}>
-        {p.plans.map((plan) => (
-          <div key={plan.name} className={cn("flex flex-col rounded-3xl p-6", plan.featured ? "bg-ink text-white" : "bg-[#f4f4f5] text-ink")}>
+        {p.plans.map((plan, i) => (
+          <HoverLift key={plan.name} delay={i * 0.1} lift={7} className={cn("flex flex-col rounded-3xl p-6 transition-shadow duration-300", plan.featured ? "bg-ink text-white hover:shadow-[0_24px_50px_-18px_rgba(15,157,117,0.55)]" : "bg-[#f4f4f5] text-ink hover:shadow-[0_18px_40px_-20px_rgba(15,17,41,0.25)]")}>
             <p className="text-sm font-bold">{plan.name}</p>
             <p className={cn("mt-1 text-xs", plan.featured ? "text-white/60" : "text-slate-500")}>{plan.tagline}</p>
             <p className="font-inter mt-6 text-5xl font-extrabold tracking-[-0.04em]">{plan.price}<span className={cn("ml-1.5 text-xs font-normal tracking-normal", plan.featured ? "text-white/60" : "text-slate-500")}>a month</span></p>
-            <Link href={`/signup?next=${encodeURIComponent(`/choose-plan?plan=${plan.name}`)}`} className={cn("mt-6 inline-flex h-11 items-center justify-center rounded-xl text-sm font-semibold", plan.featured ? "bg-brand text-white" : "bg-ink text-white")}>Get started</Link>
+            <PressLink hover={1.03} href={`/signup?next=${encodeURIComponent(`/choose-plan?plan=${plan.name}`)}`} className={cn("mt-6 inline-flex h-11 items-center justify-center rounded-xl text-sm font-semibold", plan.featured ? "bg-brand text-white" : "bg-ink text-white")}>Get started</PressLink>
             <ul className="mt-6 space-y-3 text-[13px]">
               {plan.features.map((f) => (
                 <li key={f} className="flex items-start gap-2"><Check className={cn("mt-0.5 size-3.5 shrink-0", plan.featured ? "text-brand-bright" : "text-brand")} />{f}</li>
               ))}
             </ul>
-          </div>
+          </HoverLift>
         ))}
       </div>
       <p className="mt-6 text-center text-xs text-slate-400">Introductory test pricing for early customers. Prices in INR.</p>
@@ -237,11 +240,11 @@ export function Faq({ c }: { c: LandingContent }) {
       <h2 className="font-inter mb-8 text-center text-4xl font-extrabold tracking-[-0.04em] text-ink">Questions</h2>
       <div className="space-y-2">
         {c.faq.map((f) => (
-          <details key={f.q} className="group rounded-2xl bg-[#f4f4f5] px-6 py-4">
+          <details key={f.q} className="group rounded-2xl bg-[#f4f4f5] px-6 py-4 transition-colors duration-200 hover:bg-[#ececee] open:bg-white open:shadow-[0_10px_30px_-18px_rgba(15,17,41,0.3)] open:ring-1 open:ring-slate-100">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold text-ink">
               {f.q}<ChevronDown className="size-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
             </summary>
-            <p className="mt-3 text-sm leading-7 text-slate-600">{f.a}</p>
+            <p className="mt-3 text-sm leading-7 text-slate-600 group-open:animate-in group-open:fade-in group-open:slide-in-from-top-1 group-open:duration-300">{f.a}</p>
           </details>
         ))}
       </div>
@@ -252,12 +255,12 @@ export function Faq({ c }: { c: LandingContent }) {
 export function FinalCta({ c }: { c: LandingContent }) {
   return (
     <section className={cn(wrap, "py-16")}>
-      <div className="rounded-[2.5rem] bg-ink px-6 py-16 text-center text-white">
-        <LogoMark className="mx-auto size-14" />
+      <Reveal className="rounded-[2.5rem] bg-ink px-6 py-16 text-center text-white">
+        <Float className="mx-auto w-fit"><LogoMark className="size-14" /></Float>
         <h2 className="font-inter mx-auto mt-6 max-w-[620px] text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl">{c.cta.title}</h2>
         <p className="mx-auto mt-4 max-w-[480px] text-white/60">{c.cta.sub}</p>
-        <Link href="/signup" className="mt-8 inline-flex h-12 items-center rounded-full bg-white px-8 text-[15px] font-semibold text-ink transition-transform hover:scale-[1.03]">Start free</Link>
-      </div>
+        <PressLink href="/signup" hover={1.06} className="mt-8 inline-flex h-12 items-center rounded-full bg-white px-8 text-[15px] font-semibold text-ink">Start free</PressLink>
+      </Reveal>
     </section>
   );
 }
@@ -273,7 +276,7 @@ export function LandingFooter() {
   ];
   const company = [["Sign in", "/login"], ["Create account", "/signup"], ["Privacy Policy", "/privacy-policy"], ["Terms", "/terms-of-service"]];
   const colTitle = "text-sm font-semibold text-ink";
-  const link = "text-[15px] text-slate-500 transition-colors hover:text-ink";
+  const link = "inline-block text-[15px] text-slate-500 transition-all duration-200 hover:translate-x-1 hover:text-ink";
 
   return (
     <footer className="overflow-hidden border-t border-slate-100 bg-white">
@@ -282,10 +285,10 @@ export function LandingFooter() {
           <div>
             <Logo />
             <p className="mt-5 max-w-[280px] text-[17px] leading-relaxed text-slate-500">Recover the enquiries your team forgot to follow up.</p>
-            <Link href="/signup" className={cn(btnDark, "mt-7 h-12 gap-2.5")}>
-              <ArrowRight className="size-4" />
+            <PressLink href="/signup" className={cn(btnDark, "group mt-7 h-12 gap-2.5")}>
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               Get started
-            </Link>
+            </PressLink>
             <p className="mt-5 font-mono text-xs text-slate-400">Plans from ₹499/mo · Pay by UPI</p>
           </div>
 
@@ -300,7 +303,7 @@ export function LandingFooter() {
             <h2 className={colTitle}>Works with</h2>
             <ul className="mt-5 space-y-3.5">
               {channels.map(({ label, icon: Icon }) => (
-                <li key={label} className="flex items-center gap-2.5 text-[15px] text-slate-500"><Icon className="size-[18px] text-slate-400" />{label}</li>
+                <li key={label} className="group flex items-center gap-2.5 text-[15px] text-slate-500"><Icon className="size-[18px] text-slate-400 transition-all duration-200 group-hover:scale-125 group-hover:text-brand" />{label}</li>
               ))}
             </ul>
           </div>
@@ -317,7 +320,7 @@ export function LandingFooter() {
 
         <div className="mt-14 flex items-center justify-between border-t border-slate-100 pt-8 text-sm text-slate-400">
           <span>© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</span>
-          <a href="mailto:support@leadrescue.ai" aria-label="Email support" className="flex size-11 items-center justify-center rounded-full bg-[#f1f1f2] text-ink transition-colors hover:bg-[#e8e8ea]">
+          <a href="mailto:support@leadrescue.ai" aria-label="Email support" className="flex size-11 items-center justify-center rounded-full bg-[#f1f1f2] text-ink transition-all duration-200 hover:scale-110 hover:bg-ink hover:text-white active:scale-90">
             <Mail className="size-[18px]" />
           </a>
         </div>

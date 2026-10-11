@@ -45,9 +45,9 @@ export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse, ar
     }
   };
 
-  const name = user?.fullName || data.account.name;
+  const name = user?.fullName || (isAdminArea ? "Platform admin" : data.account.name);
   const { role } = useRole();
-  const roleLabel = ROLE_LABELS[role];
+  const roleLabel = isAdminArea ? "Platform admin" : ROLE_LABELS[role];
 
   return (
     <header className="sticky top-0 z-50 flex h-[66px] items-center gap-3 bg-[#0b1026] px-4 text-white sm:gap-5 sm:px-6">

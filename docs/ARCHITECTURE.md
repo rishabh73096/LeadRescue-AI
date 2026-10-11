@@ -95,7 +95,12 @@ Backend is Supabase, set up separately. Screens are built against `services/*.ts
 
 All eight workspace screens and the five admin screens are built. `services/leads.ts`, `drafts.ts`, `settings.ts` now read and write Supabase through `lib/collection.ts` (tables from `0003_workspace_data.sql`, RLS by `user_id`). When signed out, or if the tables don't exist yet, they fall back to localStorage demo data. Remaining: connect the AI draft endpoint (replaces `lib/draft-reply.ts`), enforce plan and draft limits server-side, multi-user workspaces (staff roles) which need a `workspace_id` instead of `user_id`.
 
-**Platform admin:** separate from workspace roles (owner/admin/staff). A user is a platform admin only if their id is in `platform_admins` (migration `0002_admin.sql`; RLS enforces it). Admin nav items are hidden from everyone else (`config/navigation.ts`, `usePlatformAdmin`). Admin data comes from `profiles`, `payments`, `subscriptions`; with guards off and no Supabase, pages show sample data.
+**Two logins, two areas:**
+- **Customer (business owner who buys the software):** `/login`, `/signup` → workspace (`/dashboard`, `/leads`, …). Needs an active plan.
+- **Platform admin (you, who manages the software):** `/admin/login` → admin console (`/admin`, `/admin/payments`, `/admin/customers`, `/admin/subscriptions`, `/admin/plans`) with its own shell, menu and "Admin console" badge. No plan needed. Admin accounts are not created by signup: sign up once as a normal user, then run `insert into platform_admins (user_id) select id from auth.users where email = '...';`. The admin login rejects (and signs out) any account not in `platform_admins`; customers never see admin menus and admins do not see the customer menu.
+- Code: `app/admin/login`, `app/admin/(console)`, `components/admin/admin-gate.tsx`, `components/auth/admin-login-form.tsx`, `visibleNav(role, area)` in `config/navigation.ts`, redirects in `utils/supabase/middleware.ts`. Real enforcement is RLS (`is_platform_admin()`).
+
+**Platform admin (details):** separate from workspace roles (owner/admin/staff). A user is a platform admin only if their id is in `platform_admins` (migration `0002_admin.sql`; RLS enforces it). Admin nav items are hidden from everyone else (`config/navigation.ts`, `usePlatformAdmin`). Admin data comes from `profiles`, `payments`, `subscriptions`; with guards off and no Supabase, pages show sample data.
 
 ## 8. Prototype scope (original build order)
 
