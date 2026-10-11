@@ -12,11 +12,13 @@ import { useAuthState } from "@/context/AuthContext";
 import { useRole } from "@/hooks/use-role";
 import { ROLE_LABELS } from "@/lib/roles";
 import { useEscapeKey } from "@/hooks/use-escape-key";
+import type { NavArea } from "@/config/navigation";
 import { notify } from "@/lib/toast";
 import { BRAND } from "@/config/site";
 import type { DashboardData } from "@/types/dashboard";
 
-export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse }: { data: DashboardData; menuOpen: boolean; onMenu: () => void; collapsed?: boolean; onToggleCollapse?: () => void }) {
+export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse, area = "workspace" }: { data: DashboardData; menuOpen: boolean; onMenu: () => void; collapsed?: boolean; onToggleCollapse?: () => void; area?: NavArea }) {
+  const isAdminArea = area === "admin";
   const router = useRouter();
   const { user, signOut, refresh } = useAuthState();
   const [account, setAccount] = useState(false);
@@ -56,14 +58,15 @@ export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse }: 
         {collapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
       </button>
 
-      <Link href="/dashboard" aria-label={`${BRAND.name} dashboard`} className="group flex shrink-0 items-center gap-2.5">
+      <Link href={isAdminArea ? "/admin" : "/dashboard"} aria-label={`${BRAND.name} ${isAdminArea ? "admin console" : "dashboard"}`} className="group flex shrink-0 items-center gap-2.5">
         <LogoMark className="size-10" />
         <span className="hidden text-[21px] font-bold tracking-tight min-[400px]:inline">
           {BRAND.prefix}<span className="text-brand-bright">{BRAND.accent}</span>
         </span>
       </Link>
+      {isAdminArea ? <span className="hidden shrink-0 rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold tracking-wide text-amber-300 uppercase sm:inline">Admin console</span> : null}
 
-      <GlobalSearch className="mx-auto hidden w-full max-w-[614px] md:block" />
+      <GlobalSearch area={area} className="mx-auto hidden w-full max-w-[614px] md:block" />
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3 md:ml-0">
         <button
@@ -116,7 +119,7 @@ export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse }: 
       </div>
       {mobileSearch ? (
         <div className="absolute inset-x-0 top-full border-t border-white/10 bg-[#0b1026] p-3 md:hidden">
-          <GlobalSearch onNavigate={() => setMobileSearch(false)} />
+          <GlobalSearch area={area} onNavigate={() => setMobileSearch(false)} />
         </div>
       ) : null}
     </header>

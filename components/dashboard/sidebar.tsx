@@ -3,21 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, Headset } from "lucide-react";
-import { visibleNav } from "@/config/navigation";
+import { visibleNav, type NavArea } from "@/config/navigation";
 import { useRole } from "@/hooks/use-role";
 import { useAuthState } from "@/context/AuthContext";
-import { usePlatformAdmin } from "@/services/admin";
 import { ROLE_LABELS } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import type { DashboardData } from "@/types/dashboard";
 
-export function Sidebar({ data, onNavigate }: { data: DashboardData; onNavigate?: () => void }) {
+export function Sidebar({ data, onNavigate, area = "workspace" }: { data: DashboardData; onNavigate?: () => void; area?: NavArea }) {
   const pathname = usePathname();
   const { help } = data;
   const { role } = useRole();
   const { user } = useAuthState();
-  const isAdmin = usePlatformAdmin(user?._id) === true;
-  const displayName = user?.businessName || user?.fullName || data.account.name;
+  const isAdminArea = area === "admin";
+  const displayName = isAdminArea ? user?.fullName || "Platform admin" : user?.businessName || user?.fullName || data.account.name;
 
   return (
     <div className="flex min-h-full flex-col gap-4 p-5">
@@ -25,12 +24,12 @@ export function Sidebar({ data, onNavigate }: { data: DashboardData; onNavigate?
         <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#0b1026] text-lg font-bold text-white">{displayName[0] || "A"}</span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-ink">{displayName}</p>
-          <span className="mt-0.5 inline-flex items-center rounded-full bg-[#e8f0fe] px-2 py-0.5 text-[10px] font-medium text-[#1a73e8]">{ROLE_LABELS[role]}</span>
+          <span className="mt-0.5 inline-flex items-center rounded-full bg-[#e8f0fe] px-2 py-0.5 text-[10px] font-medium text-[#1a73e8]">{isAdminArea ? "Platform admin" : ROLE_LABELS[role]}</span>
         </div>
       </div>
 
-      <nav aria-label="Dashboard" className="flex flex-col">
-        {visibleNav(role, isAdmin).map(({ label, href, icon: Icon, gap }) => {
+      <nav aria-label={isAdminArea ? "Admin console" : "Dashboard"} className="flex flex-col">
+        {visibleNav(role, area).map(({ label, href, icon: Icon, gap }) => {
           const active = href === "/admin" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link

@@ -79,6 +79,11 @@ export async function expireSubscription(userId: string) {
   if (error) throw new Error("Couldn't update the subscription.");
 }
 
+export async function isPlatformAdmin(userId: string): Promise<boolean> {
+  const { data } = await createClient().from("platform_admins").select("user_id").eq("user_id", userId).maybeSingle();
+  return Boolean(data);
+}
+
 export function usePlatformAdmin(userId?: string): boolean | null {
   const [admin, setAdmin] = useState<boolean | null>(null);
   useEffect(() => {

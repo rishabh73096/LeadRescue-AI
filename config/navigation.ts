@@ -25,14 +25,17 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "AI Replies", roles: ALL, href: "/replies", icon: MessageSquareText, keywords: "ai replies drafts hindi english templates".split(" ") },
   { label: "Import Leads", roles: MANAGERS, href: "/import", icon: UploadCloud, gap: true, keywords: "import csv upload".split(" ") },
   { label: "Settings", roles: MANAGERS, href: "/settings", icon: Settings, keywords: "settings workspace services pricing usage".split(" ") },
-  { label: "Admin", roles: EVERYONE, admin: true, gap: true, href: "/admin", icon: ShieldCheck, keywords: "admin platform overview revenue".split(" ") },
+  { label: "Overview", roles: EVERYONE, admin: true, href: "/admin", icon: ShieldCheck, keywords: "admin platform overview revenue".split(" ") },
   { label: "Payments", roles: EVERYONE, admin: true, href: "/admin/payments", icon: Wallet, keywords: "payments upi utr verify".split(" ") },
   { label: "Customers", roles: EVERYONE, admin: true, href: "/admin/customers", icon: Users, keywords: "customers users accounts".split(" ") },
   { label: "Subscriptions", roles: EVERYONE, admin: true, href: "/admin/subscriptions", icon: Repeat, keywords: "subscriptions renew expiring".split(" ") },
   { label: "Plans", roles: EVERYONE, admin: true, href: "/admin/plans", icon: Tag, keywords: "plans pricing upi".split(" ") },
 ];
 
-export const visibleNav = (role: Role, isAdmin: boolean) => NAV_ITEMS.filter((i) => i.roles.includes(role) && (!i.admin || isAdmin));
+export type NavArea = "workspace" | "admin";
+
+// The customer workspace and the platform-admin console are separate areas with separate menus.
+export const visibleNav = (role: Role, area: NavArea = "workspace") => NAV_ITEMS.filter((i) => (area === "admin" ? i.admin : !i.admin && i.roles.includes(role)));
 
 export const navItemFor = (pathname: string) =>
   NAV_ITEMS.filter((i) => (i.href === "/" ? pathname === "/" : pathname === i.href || pathname.startsWith(`${i.href}/`))).sort((a, b) => b.href.length - a.href.length)[0];

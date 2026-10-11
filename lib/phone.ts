@@ -14,3 +14,9 @@ export const formatNational = (country: Country, digits: string): string => new 
 export function exampleNumber(country: Country): string {
   return getExampleNumber(country.code, examples)?.formatNational() ?? "";
 }
+
+// India-only product: numbers are stored as +91XXXXXXXXXX.
+export const IN_DIAL = "+91";
+export const IN_MOBILE = /^\+91[6-9]\d{9}$/;
+export const isIndianMobile = (value: string) => IN_MOBILE.test(value);
+export const formatIndian = (digits: string) => (digits.length > 5 ? `${digits.slice(0, 5)} ${digits.slice(5)}` : digits);

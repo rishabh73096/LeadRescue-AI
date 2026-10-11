@@ -4,9 +4,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { useRouter } from "next/navigation";
 import { CornerDownLeft, type LucideIcon } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
-import { visibleNav } from "@/config/navigation";
-import { useAuthState } from "@/context/AuthContext";
-import { usePlatformAdmin } from "@/services/admin";
+import { visibleNav, type NavArea } from "@/config/navigation";
 import { useRole } from "@/hooks/use-role";
 import { ROLE_LABELS } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -24,11 +22,11 @@ interface Result {
 
 const PER_GROUP = 4;
 
-function useSearchIndex(role: Role, isAdmin: boolean): Result[] {
+function useSearchIndex(role: Role, area: NavArea): Result[] {
   return useMemo(
     () =>
-      visibleNav(role, isAdmin).map((n) => ({ id: `page-${n.href}`, group: "Pages", title: n.label, subtitle: n.href === "/" ? "Overview" : n.href, href: n.href, icon: n.icon, haystack: [n.label, ...(n.keywords ?? [])].join(" ").toLowerCase() })),
-    [role, isAdmin],
+      visibleNav(role, area).map((n) => ({ id: `page-${n.href}`, group: "Pages", title: n.label, subtitle: n.href === "/" ? "Overview" : n.href, href: n.href, icon: n.icon, haystack: [n.label, ...(n.keywords ?? [])].join(" ").toLowerCase() })),
+    [role, area],
   );
 }
 
@@ -38,11 +36,10 @@ function rank(r: Result, terms: string[]) {
   return terms.reduce((n, t) => n + (title.startsWith(t) ? 3 : title.includes(t) ? 2 : 1), 0);
 }
 
-export function GlobalSearch({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
+export function GlobalSearch({ className, onNavigate, area = "workspace" }: { className?: string; onNavigate?: () => void; area?: NavArea }) {
   const router = useRouter();
   const { role } = useRole();
-  const { user } = useAuthState();
-  const index = useSearchIndex(role, usePlatformAdmin(user?._id) === true);
+  const index = useSearchIndex(role, area);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);

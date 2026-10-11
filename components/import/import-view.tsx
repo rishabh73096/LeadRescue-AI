@@ -30,6 +30,12 @@ type FieldKey = (typeof FIELDS)[number]["key"];
 const MAX_ROWS = 2000;
 const MAX_BYTES = 2 * 1024 * 1024;
 const digits = (v: string) => v.replace(/\D/g, "");
+// India only: accepts 98765 43210, 098765 43210, 91 98765 43210 or +91...; anything else counts as "no phone".
+const indianMobile = (v: string) => {
+  const d = digits(v);
+  const ten = d.length === 12 && d.startsWith("91") ? d.slice(2) : d.length === 11 && d.startsWith("0") ? d.slice(1) : d;
+  return /^[6-9]\d{9}$/.test(ten) ? `+91${ten}` : "";
+};
 
 export function ImportView() {
   const router = useRouter();
@@ -58,7 +64,7 @@ export function ImportView() {
   };
 
   const result = useMemo(() => {
-    const existing = new Set(leads.map((l) => digits(l.phone)).filter(Boolean));
+    const existing = new Set(leads.map((l) => l.phone).filter(Boolean));
     const seen = new Set<string>();
     const valid: LeadInput[] = [];
     let missing = 0;
@@ -66,16 +72,15 @@ export function ImportView() {
     const get = (r: string[], k: FieldKey) => (map[k] >= 0 ? (r[map[k]] ?? "").trim() : "");
     for (const r of body) {
       const name = get(r, "name");
-      const phone = get(r, "phone");
+      const phone = indianMobile(get(r, "phone"));
       const email = get(r, "email");
-      if (!name || (!digits(phone) && !email)) { missing++; continue; }
-      const d = digits(phone);
-      if (d && (existing.has(d) || seen.has(d))) { duplicates++; continue; }
-      if (d) seen.add(d);
+      if (!name || (!phone && !email)) { missing++; continue; }
+      if (phone && (existing.has(phone) || seen.has(phone))) { duplicates++; continue; }
+      if (phone) seen.add(phone);
       const src = get(r, "source").toLowerCase();
       valid.push({
         name: name.slice(0, 80),
-        phone: d ? (phone.startsWith("+") ? phone : d.length === 10 ? `+91${d}` : `+${d}`) : "",
+        phone,
         email,
         service: get(r, "service").slice(0, 120),
         message: get(r, "message").slice(0, 1000),

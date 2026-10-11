@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { parsePhoneNumberFromString, validatePhoneNumberLength } from "libphonenumber-js/max";
-import { getCountry } from "@/lib/countries";
 
 export const emailSchema = z
   .string()
@@ -20,21 +18,7 @@ export const nameSchema = (label: string) =>
 export const phoneSchema = z
   .string()
   .min(1, "Phone number is required")
-  .superRefine((value, ctx) => {
-    const parsed = parsePhoneNumberFromString(value);
-    const where = getCountry(parsed?.country)?.name;
-    const place = where ? ` for ${where}` : "";
-
-    const length = validatePhoneNumberLength(value);
-    if (length === "TOO_SHORT") return ctx.addIssue({ code: "custom", message: `That number is too short${place}` });
-    if (length === "TOO_LONG") return ctx.addIssue({ code: "custom", message: `That number is too long${place}` });
-
-    const type = parsed?.getType();
-    const isMobile = !type || type === "MOBILE" || type === "FIXED_LINE_OR_MOBILE";
-    if (!parsed || !parsed.isValid() || !isMobile) {
-      return ctx.addIssue({ code: "custom", message: `Enter a valid mobile number${place}` });
-    }
-  });
+  .refine((v) => /^\+91[6-9]\d{9}$/.test(v), "Enter a valid 10-digit Indian mobile number");
 
 export const passwordSchema = z
   .string()

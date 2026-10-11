@@ -1,13 +1,9 @@
 "use client";
 
-import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { CountrySelect } from "@/components/ui/country-select";
-import { useDetectedCountry } from "@/hooks/use-detected-country";
-import { DEFAULT_COUNTRY, getCountry, type Country } from "@/lib/countries";
 import { applyFilter } from "@/lib/input-filters";
-import { exampleNumber, formatNational, maxNationalDigits, toE164 } from "@/lib/phone";
+import { IN_DIAL, formatIndian } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 interface PhoneInputProps {
@@ -21,25 +17,17 @@ interface PhoneInputProps {
   className?: string;
 }
 
-export function PhoneInput({ id, name, value, onChange, onBlur, invalid, disabled, className }: PhoneInputProps) {
-  const detected = useDetectedCountry();
-  const [initial] = useState(() => (value.startsWith("+") ? parsePhoneNumberFromString(value) : undefined));
-  const [picked, setPicked] = useState<string | null>(initial?.country ?? null);
-  const [digits, setDigits] = useState(initial?.nationalNumber ?? "");
-  const country: Country = getCountry(picked ?? detected) ?? getCountry(DEFAULT_COUNTRY)!;
+const nationalDigits = (v: string) => (v.startsWith(IN_DIAL) ? v.slice(IN_DIAL.length) : "").replace(/\D/g, "").slice(0, 10);
 
-  const emit = (c: Country, d: string) => onChange(toE164(c, d));
+// India only: fixed +91 prefix, 10 digits starting 6-9. Emits "+91XXXXXXXXXX" (or "" when empty).
+export function PhoneInput({ id, name, value, onChange, onBlur, invalid, disabled, className }: PhoneInputProps) {
+  const [digits, setDigits] = useState(() => nationalDigits(value));
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the parent form cleared the value
     if (value === "" && digits !== "") setDigits("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
-
-  useEffect(() => {
-    if (digits) emit(country, digits);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [country.code]);
 
   return (
     <div
@@ -49,34 +37,25 @@ export function PhoneInput({ id, name, value, onChange, onBlur, invalid, disable
         className,
       )}
     >
-      <CountrySelect
-        value={country}
-        disabled={disabled}
-        onChange={(code) => {
-          setPicked(code);
-          const next = getCountry(code);
-          if (next) {
-            const trimmed = digits.slice(0, maxNationalDigits(next));
-            setDigits(trimmed);
-            emit(next, trimmed);
-          }
-        }}
-      />
+      <span className="flex shrink-0 items-center gap-2 border-r border-slate-200 px-3.5 text-sm font-medium text-slate-700 select-none">
+        <span aria-hidden className="text-base">🇮🇳</span>
+        {IN_DIAL}
+      </span>
       <Input
         id={id}
         name={name}
         type="tel"
-        inputMode="tel"
+        inputMode="numeric"
         autoComplete="tel-national"
-        value={formatNational(country, digits)}
+        value={formatIndian(digits)}
         disabled={disabled}
-        placeholder={exampleNumber(country) || "Phone number"}
+        placeholder="98765 43210"
         aria-invalid={invalid}
         onBlur={onBlur}
         onChange={(e) => {
-          const next = applyFilter("digits", e.target.value).slice(0, maxNationalDigits(country));
+          const next = applyFilter("digits", e.target.value).slice(0, 10);
           setDigits(next);
-          emit(country, next);
+          onChange(next ? `${IN_DIAL}${next}` : "");
         }}
         className="h-full min-w-0 flex-1 rounded-none border-0 bg-transparent px-3 text-sm shadow-none ring-0 focus-visible:ring-0 dark:bg-transparent"
       />

@@ -8,6 +8,7 @@ import { Modal, ModalFooter, ModalHeader } from "@/components/ui/modal";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useForm } from "@/hooks/use-form";
+import { isIndianMobile } from "@/lib/phone";
 import { SOURCES } from "@/lib/leads";
 import { notify } from "@/lib/toast";
 import { addLead, inDays, updateLead } from "@/services/leads";
@@ -16,7 +17,7 @@ import type { Lead, LeadSource } from "@/types/lead";
 const schema = z
   .object({
     name: z.string().trim().min(2, "Enter the customer's name").max(80),
-    phone: z.string(),
+    phone: z.string().refine((v) => !v || isIndianMobile(v), "Enter a valid 10-digit Indian mobile number"),
     email: z.string().trim().refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), "Enter a valid email"),
     source: z.string(),
     service: z.string().trim().max(120),
@@ -24,7 +25,7 @@ const schema = z
     value: z.string().refine((v) => !v || /^\d{1,9}$/.test(v), "Use digits only"),
     followUp: z.string(),
   })
-  .refine((v) => v.phone.replace(/\D/g, "").length > 4 || v.email, { path: ["phone"], message: "Add a phone number or an email" });
+  .refine((v) => v.phone || v.email, { path: ["phone"], message: "Add a phone number or an email" });
 
 type Values = { name: string; phone: string; email: string; source: string; service: string; message: string; value: string; followUp: string };
 
@@ -46,7 +47,7 @@ function LeadFormBody({ lead, onClose }: { lead?: Lead; onClose: () => void }) {
   const submit = form.handleSubmit((v) => {
     const input = {
       name: v.name.trim(),
-      phone: v.phone.replace(/\D/g, "").length > 4 ? v.phone : "",
+      phone: v.phone,
       email: v.email.trim(),
       source: v.source as LeadSource,
       service: v.service.trim(),

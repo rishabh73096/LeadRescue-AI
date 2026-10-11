@@ -7,6 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 const PROTECTED = ["/dashboard", "/choose-plan", "/leads", "/pipeline", "/follow-ups", "/replies", "/import", "/settings", "/admin"];
+const isAdminLogin = (path: string) => path === "/admin/login";
 const GUEST_ONLY = ["/login", "/signup"];
 
 const matches = (path: string, list: string[]) => list.some((p) => path === p || path.startsWith(`${p}/`));
@@ -43,7 +44,10 @@ export async function updateSession(request: NextRequest) {
 
   if (!GUARDS_ENABLED) return response;
 
-  if (!user && matches(pathname, PROTECTED)) return redirect(loginUrl(`${pathname}${search}`));
+  if (!user && matches(pathname, PROTECTED) && !isAdminLogin(pathname)) {
+    const target = `${pathname}${search}`;
+    return redirect(pathname.startsWith("/admin") ? `/admin/login?next=${encodeURIComponent(target)}` : loginUrl(target));
+  }
   if (user && matches(pathname, GUEST_ONLY)) return redirect(safeNext(request.nextUrl.searchParams.get("next")));
 
   return response;
