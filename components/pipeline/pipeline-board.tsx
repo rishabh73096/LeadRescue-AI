@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ContactRound, IndianRupee, Percent, Trophy } from "lucide-react";
+import { ChartCard, Grid } from "@/components/charts/chart-card";
+import { BarsH, STAGE_COLORS } from "@/components/charts/charts";
+import { StatCard } from "@/components/charts/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
 import { useMounted } from "@/hooks/use-mounted";
 import { useNow } from "@/hooks/use-now";
-import { formatInr, leadReason, STATUSES, statusMeta } from "@/lib/leads";
+import { formatInr, isOpen, leadReason, STATUSES, statusMeta } from "@/lib/leads";
+import { stageValues, sum, winRate } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 import { notify } from "@/lib/toast";
 import { setLeadStatus, useLeads } from "@/services/leads";
@@ -33,6 +37,12 @@ export function PipelineBoard() {
   return (
     <div className="space-y-6">
       <PageHeader title="Pipeline" description="Drag a card to a new stage, or use the dropdown on the card." />
+      <Grid cols={4}>
+        <StatCard icon={ContactRound} label="Open leads" value={String(leads.filter(isOpen).length)} />
+        <StatCard icon={IndianRupee} label="Open value" value={formatInr(sum(leads.filter(isOpen).map((l) => l.value)))} />
+        <StatCard icon={Trophy} label="Won value" value={formatInr(sum(leads.filter((l) => l.status === "won").map((l) => l.value)))} sub={`${leads.filter((l) => l.status === "won").length} deals`} />
+        <StatCard icon={Percent} label="Win rate" value={winRate(leads) === null ? "—" : `${winRate(leads)}%`} sub="Won of closed" />
+      </Grid>
       <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-5 lg:px-0">
         {STATUSES.map((s) => {
           const items = leads.filter((l) => l.status === s.value);
@@ -61,6 +71,9 @@ export function PipelineBoard() {
           );
         })}
       </div>
+      <ChartCard title="Value by stage" description="Estimated ₹ in each stage" table={{ head: ["Stage", "Value"], rows: stageValues(leads).map((s) => [s.label, formatInr(s.value)]) }}>
+        <BarsH data={stageValues(leads).map((s) => ({ label: s.label, value: s.value, color: STAGE_COLORS[s.key] }))} name="Value" height={200} format={(n) => formatInr(n)} />
+      </ChartCard>
     </div>
   );
 }

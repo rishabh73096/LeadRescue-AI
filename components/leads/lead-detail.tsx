@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CalendarClock, Mail, MessageSquareText, Pencil, Phone, StickyNote, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarClock, Clock, Activity as ActivityIcon, IndianRupee, Mail, MessageSquareText, Pencil, Phone, StickyNote, Trash2 } from "lucide-react";
+import { Grid } from "@/components/charts/chart-card";
+import { StatCard } from "@/components/charts/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -69,6 +71,12 @@ export function LeadDetail({ id }: { id: string }) {
           <Link href={`/replies?lead=${lead.id}`} className={cn(buttonVariants({ variant: "brand", size: "xl" }), "rounded-full px-5")}><MessageSquareText />Draft reply</Link>
         </div>
       </header>
+
+      <Grid cols={3}>
+        <StatCard icon={IndianRupee} label="Estimated value" value={lead.value ? formatInr(lead.value) : "—"} />
+        <StatCard icon={Clock} label="Days since enquiry" value={String(Math.max(0, Math.floor((now - new Date(lead.createdAt).getTime()) / 86_400_000)))} sub={sourceLabel(lead.source)} />
+        <StatCard icon={ActivityIcon} label="Activity logged" value={String(activities.length)} />
+      </Grid>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">

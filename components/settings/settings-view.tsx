@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Briefcase, CreditCard, Plus, Trash2, UserRound } from "lucide-react";
+import { Briefcase, CreditCard, ListChecks, MessageSquareText, Plus, Trash2, UserRound } from "lucide-react";
+import { AreaTrend } from "@/components/charts/charts";
+import { ChartCard, Grid } from "@/components/charts/chart-card";
+import { StatCard } from "@/components/charts/stat-card";
+import { useNow } from "@/hooks/use-now";
+import { perDay } from "@/lib/stats";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FormField, TextAreaField, TextField } from "@/components/ui/form-field";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -29,6 +34,7 @@ export function SettingsView() {
 
 function SettingsForm({ saved }: { saved: WorkspaceSettings }) {
   const { user } = useAuthState();
+  const now = useNow();
   const { plan } = useSubscription();
   const drafts = useDrafts();
   const [s, setS] = useState<WorkspaceSettings>(saved);
@@ -49,6 +55,15 @@ function SettingsForm({ saved }: { saved: WorkspaceSettings }) {
   return (
     <div className="space-y-6">
       <PageHeader title="Settings" description="Your business details are used when drafting replies." actions={<Button type="button" variant="brand" size="xl" className="rounded-full px-6" disabled={!dirty} onClick={save}>Save changes</Button>} />
+
+      <Grid cols={3}>
+        <StatCard icon={ListChecks} label="Services listed" value={String(saved.services.length)} />
+        <StatCard icon={MessageSquareText} label="AI drafts this month" value={`${used} / ${MONTHLY_DRAFT_CAP}`} sub={`${Math.round((used / MONTHLY_DRAFT_CAP) * 100)}% of your limit`} />
+        <StatCard icon={CreditCard} label="Plan" value={plan ?? "None"} />
+      </Grid>
+      <ChartCard title="AI draft usage" description="Last 14 days" table={{ head: ["Day", "Drafts"], rows: perDay(drafts, (d) => d.createdAt, 14, now).map((p) => [p.label, p.value]) }}>
+        <AreaTrend data={perDay(drafts, (d) => d.createdAt, 14, now)} name="Drafts" height={180} />
+      </ChartCard>
 
       <Panel className="p-5 sm:p-6">
         <PanelHeader title="Business" icon={Briefcase} />

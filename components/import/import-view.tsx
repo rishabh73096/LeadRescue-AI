@@ -2,7 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, FileSpreadsheet, UploadCloud } from "lucide-react";
+import { CopyX, Download, FileSpreadsheet, ListChecks, Rows3, UploadCloud, UserX } from "lucide-react";
+import { ChartCard, Grid } from "@/components/charts/chart-card";
+import { BarsH } from "@/components/charts/charts";
+import { StatCard } from "@/components/charts/stat-card";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
@@ -114,6 +117,15 @@ export function ImportView() {
 
       {rows.length > 1 ? (
         <>
+          <Grid cols={4}>
+            <StatCard icon={Rows3} label="Rows in file" value={String(body.length)} />
+            <StatCard icon={ListChecks} label="Ready to import" value={String(result.valid.length)} />
+            <StatCard icon={UserX} label="Missing name or contact" value={String(result.missing)} tone={result.missing ? "red" : undefined} />
+            <StatCard icon={CopyX} label="Duplicates skipped" value={String(result.duplicates)} />
+          </Grid>
+          <ChartCard title="What will happen to your rows" table={{ head: ["Outcome", "Rows"], rows: [["Imported", result.valid.length], ["Missing name or contact", result.missing], ["Duplicate phone", result.duplicates]] }}>
+            <BarsH name="Rows" height={150} data={[{ label: "Imported", value: result.valid.length, color: "var(--viz-3)" }, { label: "Missing info", value: result.missing, color: "var(--viz-bad)" }, { label: "Duplicates", value: result.duplicates, color: "var(--viz-muted)" }]} />
+          </ChartCard>
           <Panel className="p-5 sm:p-6">
             <PanelHeader title="Match columns" description="We guessed from your headers. Fix anything that looks off." icon={FileSpreadsheet} />
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

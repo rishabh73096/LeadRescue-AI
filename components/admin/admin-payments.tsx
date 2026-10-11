@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, X } from "lucide-react";
+import { Ban, Check, Clock, Copy, IndianRupee, Receipt, X } from "lucide-react";
+import { Grid } from "@/components/charts/chart-card";
+import { StatCard } from "@/components/charts/stat-card";
 import { DemoBanner, StatusBadge, Table, Who, fmtDateTime, profileOf } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
 import { CountTabs } from "@/components/ui/count-tabs";
@@ -18,6 +20,7 @@ export function PaymentsView() {
   if (!data) return null;
 
   const count = (s: PaymentStatus) => data.payments.filter((p) => p.status === s).length;
+  const verified = data.payments.filter((p) => p.status === "verified");
   const rows = data.payments.filter((p) => p.status === tab);
 
   const act = async (id: string, status: PaymentStatus, label: string) => {
@@ -41,6 +44,12 @@ export function PaymentsView() {
     <div className="space-y-6">
       <PageHeader title="Payments" description="Match each UTR against your UPI or bank statement, then verify. Verifying activates 30 days of the plan." />
       <DemoBanner show={data.demo} />
+      <Grid cols={4}>
+        <StatCard icon={Clock} label="Waiting to verify" value={String(count("pending"))} sub={formatInr(data.payments.filter((p) => p.status === "pending").reduce((n, p) => n + p.amount_inr, 0))} tone={count("pending") ? "red" : undefined} />
+        <StatCard icon={IndianRupee} label="Verified revenue" value={formatInr(verified.reduce((n, p) => n + p.amount_inr, 0))} sub={`${verified.length} payments`} />
+        <StatCard icon={Receipt} label="Average payment" value={verified.length ? formatInr(Math.round(verified.reduce((n, p) => n + p.amount_inr, 0) / verified.length)) : "—"} />
+        <StatCard icon={Ban} label="Rejected" value={String(count("rejected"))} />
+      </Grid>
       <CountTabs<PaymentStatus> label="Payment status" value={tab} onChange={setTab} tabs={[{ value: "pending", label: "Pending", count: count("pending"), tone: "amber" }, { value: "verified", label: "Verified", count: count("verified") }, { value: "rejected", label: "Rejected", count: count("rejected") }]} />
       <Table head={["Customer", "Plan", "Amount", "UTR", "Submitted", "Status", ""]} empty={`No ${tab} payments.`}>
         {rows.map((p) => (

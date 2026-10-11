@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CircleDollarSign, Clock, Repeat, Users, type LucideIcon } from "lucide-react";
+import { ArrowRight, CircleDollarSign, Clock, Repeat, Users } from "lucide-react";
 import { DemoBanner, PLAN_PRICE, Table, Who, fmtDateTime, profileOf } from "@/components/admin/admin-ui";
+import { BarsH, Columns } from "@/components/charts/charts";
+import { ChartCard, Grid } from "@/components/charts/chart-card";
+import { StatCard } from "@/components/charts/stat-card";
 import { PageHeader } from "@/components/ui/page-header";
-import { Panel } from "@/components/ui/panel";
 import { useNow } from "@/hooks/use-now";
 import { formatInr } from "@/lib/leads";
 import { useAdminData } from "@/services/admin";
@@ -20,16 +22,32 @@ export function AdminOverview() {
   const monthAgo = now - 30 * 86_400_000;
   const collected = data.payments.filter((p) => p.status === "verified" && new Date(p.created_at).getTime() > monthAgo).reduce((s, p) => s + p.amount_inr, 0);
 
+  const monthStart = (back: number) => new Date(new Date(now).getFullYear(), new Date(now).getMonth() - back, 1);
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const from = monthStart(5 - i).getTime();
+    const to = monthStart(4 - i).getTime();
+    return { label: monthStart(5 - i).toLocaleDateString("en-IN", { month: "short" }), value: data.payments.filter((p) => p.status === "verified" && new Date(p.created_at).getTime() >= from && new Date(p.created_at).getTime() < to).reduce((n, p) => n + p.amount_inr, 0) };
+  });
+  const planMix = Object.keys(PLAN_PRICE).map((name) => ({ label: name, value: active.filter((s) => s.plan === name).length }));
+
   return (
     <div className="space-y-6">
       <PageHeader title="Admin" description="Payments to verify, customers and subscription health." />
       <DemoBanner show={data.demo} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat icon={Users} label="Customers" value={String(data.profiles.length)} href="/admin/customers" />
-        <Stat icon={Repeat} label="Active subscriptions" value={String(active.length)} href="/admin/subscriptions" />
-        <Stat icon={Clock} label="Payments to verify" value={String(pending.length)} href="/admin/payments" />
-        <Stat icon={CircleDollarSign} label="MRR" value={formatInr(mrr)} sub={`${formatInr(collected)} collected, last 30 days`} href="/admin/payments" />
-      </div>
+      <Grid cols={4}>
+        <StatCard icon={Users} label="Customers" value={String(data.profiles.length)} href="/admin/customers" />
+        <StatCard icon={Repeat} label="Active subscriptions" value={String(active.length)} href="/admin/subscriptions" />
+        <StatCard icon={Clock} label="Payments to verify" value={String(pending.length)} tone={pending.length ? "red" : undefined} href="/admin/payments" />
+        <StatCard icon={CircleDollarSign} label="MRR" value={formatInr(mrr)} sub={`${formatInr(collected)} collected, last 30 days`} href="/admin/payments" />
+      </Grid>
+      <Grid cols={3}>
+        <ChartCard title="Revenue per month" description="Verified payments, last 6 months" className="md:col-span-2" table={{ head: ["Month", "Revenue"], rows: months.map((m) => [m.label, formatInr(m.value)]) }}>
+          <Columns data={months} series={[{ key: "value", name: "Revenue", color: "var(--viz-1)" }]} format={(n) => formatInr(n)} />
+        </ChartCard>
+        <ChartCard title="Active plans" description="Customers on each plan" table={{ head: ["Plan", "Customers"], rows: planMix.map((p) => [p.label, p.value]) }}>
+          <BarsH data={planMix} name="Customers" height={140} />
+        </ChartCard>
+      </Grid>
 
       <section>
         <div className="mb-3 flex items-center justify-between">
@@ -49,18 +67,5 @@ export function AdminOverview() {
         </Table>
       </section>
     </div>
-  );
-}
-
-function Stat({ icon: Icon, label, value, sub, href }: { icon: LucideIcon; label: string; value: string; sub?: string; href: string }) {
-  return (
-    <Link href={href} className="block">
-      <Panel className="p-5 transition-shadow hover:shadow-md">
-        <span className="flex size-10 items-center justify-center rounded-lg bg-[#e8e6fb] text-[#3b2fd0]"><Icon className="size-[18px]" /></span>
-        <p className="font-inter mt-4 text-3xl font-extrabold tracking-[-0.03em] text-ink">{value}</p>
-        <p className="mt-1 text-sm text-slate-500">{label}</p>
-        {sub ? <p className="mt-0.5 text-xs text-slate-400">{sub}</p> : null}
-      </Panel>
-    </Link>
   );
 }

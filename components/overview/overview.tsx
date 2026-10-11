@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, CalendarClock, ContactRound, IndianRupee, Trophy, type LucideIcon } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarClock, ContactRound, IndianRupee, Percent } from "lucide-react";
+import { AreaTrend, BarsH, Columns, STAGE_COLORS } from "@/components/charts/charts";
+import { ChartCard, Grid } from "@/components/charts/chart-card";
+import { StatCard } from "@/components/charts/stat-card";
 import { ActivityTimeline } from "@/components/leads/activity-timeline";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
@@ -10,9 +13,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useMounted } from "@/hooks/use-mounted";
 import { useNow } from "@/hooks/use-now";
 import { addDays, startOfDay } from "@/lib/date";
-import { formatInr, isOpen, leadReason, STATUSES } from "@/lib/leads";
-import { cn } from "@/lib/utils";
+import { formatInr, isOpen, leadReason } from "@/lib/leads";
+import { dueNextDays, perDay, sourceCounts, stageCounts, stageValues, sum, winRate } from "@/lib/stats";
 import { useActivities, useLeads } from "@/services/leads";
+import type { Lead } from "@/types/lead";
+
+const compactInr = (n: number) => (n >= 100000 ? `₹${+(n / 100000).toFixed(1)}L` : n >= 1000 ? `₹${+(n / 1000).toFixed(1)}K` : `₹${n}`);
 
 export function Overview() {
   const mounted = useMounted();
@@ -26,29 +32,54 @@ export function Overview() {
   const today = startOfDay(now).getTime();
   const tomorrow = addDays(today, 1).getTime();
   const open = leads.filter(isOpen);
-  const due = (l: (typeof leads)[number]) => (l.nextFollowUpAt ? new Date(l.nextFollowUpAt).getTime() : null);
-  const attention = open
-    .map((l) => ({ lead: l, reason: leadReason(l, now) }))
-    .filter((x): x is { lead: (typeof leads)[number]; reason: string } => x.reason !== null);
+  const due = (l: Lead) => (l.nextFollowUpAt ? new Date(l.nextFollowUpAt).getTime() : null);
+  const attention = open.map((l) => ({ lead: l, reason: leadReason(l, now) })).filter((x): x is { lead: Lead; reason: string } => x.reason !== null);
   const dueToday = open.filter((l) => { const d = due(l); return d !== null && d >= today && d < tomorrow; });
-  const openValue = open.reduce((s, l) => s + l.value, 0);
-  const wonValue = leads.filter((l) => l.status === "won").reduce((s, l) => s + l.value, 0);
-  const max = Math.max(1, ...STATUSES.map((s) => leads.filter((l) => l.status === s.value).length));
-  const nameOf = (id: string) => leads.find((l) => l.id === id)?.name ?? "Deleted lead";
+  const openValue = sum(open.map((l) => l.value));
+  const wonValue = sum(leads.filter((l) => l.status === "won").map((l) => l.value));
+  const rate = winRate(leads);
   const first = user?.fullName?.split(" ")[0];
+
+  const trend = perDay(leads, (l) => l.createdAt, 14, now);
+  const stages = stageCounts(leads).map((s) => ({ label: s.label, value: s.value, color: STAGE_COLORS[s.key] }));
+  const values = stageValues(leads).map((s) => ({ label: s.label, value: s.value, color: STAGE_COLORS[s.key] }));
+  const sources = sourceCounts(leads);
+  const load = dueNextDays(leads, 7, now);
+  const nameOf = (id: string) => leads.find((l) => l.id === id)?.name ?? "Deleted lead";
 
   return (
     <div className="space-y-6">
-      <PageHeader title={first ? `Hi ${first}, here's today` : "Today"} description="Leads that need a reply, and how the pipeline looks." />
+      <PageHeader title={first ? `Hi ${first}, here’s today` : "Today"} description="Leads that need a reply, and how the pipeline looks." />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat icon={ContactRound} label="Open leads" value={String(open.length)} href="/leads" />
-        <Stat icon={AlertTriangle} label="Need attention" value={String(attention.length)} tone={attention.length ? "red" : undefined} href="/follow-ups" />
-        <Stat icon={CalendarClock} label="Due today" value={String(dueToday.length)} href="/follow-ups" />
-        <Stat icon={IndianRupee} label="Open pipeline value" value={formatInr(openValue)} sub={`${formatInr(wonValue)} won`} href="/pipeline" />
-      </div>
+      <Grid cols={4}>
+        <StatCard icon={ContactRound} label="Open leads" value={String(open.length)} sub={`${leads.length} in total`} spark={trend.map((p) => p.value)} href="/leads" />
+        <StatCard icon={AlertTriangle} label="Need attention" value={String(attention.length)} sub={`${dueToday.length} due today`} tone={attention.length ? "red" : undefined} href="/follow-ups" />
+        <StatCard icon={IndianRupee} label="Open pipeline value" value={formatInr(openValue)} sub={`${formatInr(wonValue)} won`} href="/pipeline" />
+        <StatCard icon={Percent} label="Win rate" value={rate === null ? "—" : `${rate}%`} sub="Won of closed leads" href="/pipeline" />
+      </Grid>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <Grid cols={2}>
+        <ChartCard title="New leads" description="Last 14 days" table={{ head: ["Day", "Leads"], rows: trend.map((p) => [p.label, p.value]) }}>
+          <AreaTrend data={trend} name="New leads" />
+        </ChartCard>
+        <ChartCard title="Pipeline by stage" description="Number of leads in each stage" table={{ head: ["Stage", "Leads"], rows: stages.map((s) => [s.label, s.value]) }}>
+          <BarsH data={stages} name="Leads" height={220} />
+        </ChartCard>
+      </Grid>
+
+      <Grid cols={3}>
+        <ChartCard title="Where leads come from" description="By source" table={{ head: ["Source", "Leads"], rows: sources.map((s) => [s.label, s.value]) }}>
+          {sources.length ? <BarsH data={sources} name="Leads" /> : <Empty />}
+        </ChartCard>
+        <ChartCard title="Value by stage" description="Estimated ₹ in each stage" table={{ head: ["Stage", "Value"], rows: values.map((s) => [s.label, formatInr(s.value)]) }}>
+          <Columns data={values} series={[{ key: "value", name: "Value", color: "var(--viz-1)" }]} format={compactInr} />
+        </ChartCard>
+        <ChartCard title="Follow-ups coming up" description="Due in the next 7 days" table={{ head: ["Day", "Follow-ups"], rows: load.map((p) => [p.label, p.value]) }}>
+          <Columns data={load} series={[{ key: "value", name: "Follow-ups", color: "var(--viz-3)" }]} />
+        </ChartCard>
+      </Grid>
+
+      <Grid cols={2}>
         <Panel className="p-5 sm:p-6">
           <PanelHeader title="Needs a reply" description="Sorted by what slipped first." icon={AlertTriangle} aside={<Link href="/follow-ups" className="text-brand inline-flex items-center gap-1 text-sm font-semibold hover:underline">All follow-ups<ArrowRight className="size-3.5" /></Link>} />
           {attention.length === 0 ? (
@@ -71,49 +102,16 @@ export function Overview() {
         </Panel>
 
         <Panel className="p-5 sm:p-6">
-          <PanelHeader title="Pipeline" icon={Trophy} />
-          <ul className="mt-5 space-y-3">
-            {STATUSES.map((s) => {
-              const n = leads.filter((l) => l.status === s.value).length;
-              return (
-                <li key={s.value} className="flex items-center gap-3 text-sm">
-                  <span className="w-24 shrink-0 text-slate-600">{s.label}</span>
-                  <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-                    <span className="bg-brand block h-full rounded-full" style={{ width: `${(n / max) * 100}%` }} />
-                  </span>
-                  <span className="w-6 text-right font-semibold text-ink">{n}</span>
-                </li>
-              );
-            })}
-          </ul>
+          <PanelHeader title="Recent activity" icon={CalendarClock} />
+          {activities.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-400">Activity appears here as you work your leads.</p>
+          ) : (
+            <ActivityTimeline className="mt-5" createdAt="" activities={activities.slice(0, 6).map((a) => ({ ...a, body: `${nameOf(a.leadId)}: ${a.body}` }))} />
+          )}
         </Panel>
-      </div>
-
-      <Panel className="p-5 sm:p-6">
-        <PanelHeader title="Recent activity" />
-        {activities.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-400">Activity appears here as you work your leads.</p>
-        ) : (
-          <ActivityTimeline
-            className="mt-5"
-            createdAt=""
-            activities={activities.slice(0, 8).map((a) => ({ ...a, body: `${nameOf(a.leadId)}: ${a.body}` }))}
-          />
-        )}
-      </Panel>
+      </Grid>
     </div>
   );
 }
 
-function Stat({ icon: Icon, label, value, sub, href, tone }: { icon: LucideIcon; label: string; value: string; sub?: string; href: string; tone?: "red" }) {
-  return (
-    <Link href={href} className="block">
-      <Panel className="p-5 transition-shadow hover:shadow-md">
-        <span className={cn("flex size-10 items-center justify-center rounded-lg", tone === "red" ? "bg-[#fde0e0] text-[#c2262e]" : "bg-[#e8e6fb] text-[#3b2fd0]")}><Icon className="size-[18px]" /></span>
-        <p className="font-inter mt-4 text-3xl font-extrabold tracking-[-0.03em] text-ink">{value}</p>
-        <p className="mt-1 text-sm text-slate-500">{label}</p>
-        {sub ? <p className="mt-0.5 text-xs text-slate-400">{sub}</p> : null}
-      </Panel>
-    </Link>
-  );
-}
+const Empty = () => <p className="py-10 text-center text-sm text-slate-400">No data yet.</p>;

@@ -2,12 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Copy, MessageCircle, Sparkles } from "lucide-react";
+import { Check, Copy, Languages, MessageCircle, MessageSquareText, Sparkles, UserX } from "lucide-react";
+import { ChartCard, Grid } from "@/components/charts/chart-card";
+import { Columns } from "@/components/charts/charts";
+import { StatCard } from "@/components/charts/stat-card";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
 import { Panel, PanelHeader } from "@/components/ui/panel";
 import { TextAreaField } from "@/components/ui/form-field";
+import { useNow } from "@/hooks/use-now";
+import { draftsByLanguage } from "@/lib/stats";
 import { useMounted } from "@/hooks/use-mounted";
 import { draftReply } from "@/lib/draft-reply";
 import { sourceLabel } from "@/lib/leads";
@@ -23,6 +28,7 @@ export const MONTHLY_DRAFT_CAP = 100;
 
 export function RepliesView({ initialLead }: { initialLead?: string }) {
   const mounted = useMounted();
+  const now = useNow();
   const { leads } = useLeads();
   const settings = useSettings();
   const drafts = useDrafts();
@@ -61,6 +67,14 @@ export function RepliesView({ initialLead }: { initialLead?: string }) {
   return (
     <div className="space-y-6">
       <PageHeader title="AI Replies" description="Draft a reply from the customer's enquiry, edit it, then send it yourself. Nothing is sent automatically." />
+      <Grid cols={3}>
+        <StatCard icon={MessageSquareText} label="Drafts this month" value={String(used)} sub={`${MONTHLY_DRAFT_CAP - used} left`} />
+        <StatCard icon={Languages} label="Hindi drafts" value={String(drafts.filter((d) => d.language === "hi").length)} sub={`${drafts.filter((d) => d.language === "en").length} English`} />
+        <StatCard icon={UserX} label="Leads without a draft" value={String(leads.filter((l) => !drafts.some((d) => d.leadId === l.id)).length)} />
+      </Grid>
+      <ChartCard title="Drafts per day" description="Last 14 days" legend={[{ label: "English", color: "var(--viz-1)" }, { label: "Hindi", color: "var(--viz-2)" }]} table={{ head: ["Day", "English", "Hindi"], rows: draftsByLanguage(drafts, 14, now).map((r) => [r.label, r.en, r.hi]) }}>
+        <Columns data={draftsByLanguage(drafts, 14, now)} series={[{ key: "en", name: "English", color: "var(--viz-1)" }, { key: "hi", name: "Hindi", color: "var(--viz-2)" }]} height={180} />
+      </ChartCard>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Panel className="space-y-5 p-5 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-[1fr_auto]">

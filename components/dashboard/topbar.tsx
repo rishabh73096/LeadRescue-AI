@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Bell, ChevronDown, LogIn, LogOut, Menu, RotateCw, Search, X } from "lucide-react";
+import { Bell, ChevronDown, LogIn, LogOut, Menu, PanelLeftClose, PanelLeftOpen, RotateCw, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlobalSearch } from "@/components/dashboard/global-search";
 import { LogoMark } from "@/components/ui/logo-mark";
@@ -16,7 +16,7 @@ import { notify } from "@/lib/toast";
 import { BRAND } from "@/config/site";
 import type { DashboardData } from "@/types/dashboard";
 
-export function Topbar({ data, menuOpen, onMenu }: { data: DashboardData; menuOpen: boolean; onMenu: () => void }) {
+export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse }: { data: DashboardData; menuOpen: boolean; onMenu: () => void; collapsed?: boolean; onToggleCollapse?: () => void }) {
   const router = useRouter();
   const { user, signOut, refresh } = useAuthState();
   const [account, setAccount] = useState(false);
@@ -51,6 +51,9 @@ export function Topbar({ data, menuOpen, onMenu }: { data: DashboardData; menuOp
     <header className="sticky top-0 z-50 flex h-[66px] items-center gap-3 bg-[#0b1026] px-4 text-white sm:gap-5 sm:px-6">
       <button type="button" onClick={onMenu} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} aria-controls="dashboard-sidebar" className="-ml-1 flex size-9 items-center justify-center rounded-lg hover:bg-white/10 lg:hidden">
         {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+      </button>
+      <button type="button" onClick={onToggleCollapse} aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} aria-expanded={!collapsed} aria-controls="dashboard-sidebar" className="-ml-1 hidden size-9 items-center justify-center rounded-lg hover:bg-white/10 lg:flex">
+        {collapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
       </button>
 
       <Link href="/dashboard" aria-label={`${BRAND.name} dashboard`} className="group flex shrink-0 items-center gap-2.5">

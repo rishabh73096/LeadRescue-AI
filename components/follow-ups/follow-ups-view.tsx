@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarCheck, Check, ChevronRight } from "lucide-react";
+import { AlertTriangle, CalendarCheck, CalendarClock, CalendarDays, Check, ChevronRight, CircleOff } from "lucide-react";
+import { ChartCard, Grid } from "@/components/charts/chart-card";
+import { Columns } from "@/components/charts/charts";
+import { StatCard } from "@/components/charts/stat-card";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -10,6 +13,7 @@ import { useMounted } from "@/hooks/use-mounted";
 import { useNow } from "@/hooks/use-now";
 import { addDays, relativeDay, startOfDay } from "@/lib/date";
 import { isOpen, leadReason, statusMeta } from "@/lib/leads";
+import { dueNextDays } from "@/lib/stats";
 import { notify } from "@/lib/toast";
 import { completeFollowUp, useLeads } from "@/services/leads";
 import type { Lead } from "@/types/lead";
@@ -37,6 +41,15 @@ export function FollowUpsView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Follow-ups" description="Who to contact next. Mark one done and pick when to follow up again." />
+      <Grid cols={4}>
+        <StatCard icon={AlertTriangle} label="Overdue" value={String(groups[0].items.length)} tone={groups[0].items.length ? "red" : undefined} />
+        <StatCard icon={CalendarClock} label="Due today" value={String(groups[1].items.length)} />
+        <StatCard icon={CalendarDays} label="Upcoming" value={String(groups[2].items.length)} />
+        <StatCard icon={CircleOff} label="No date set" value={String(groups[3].items.length)} />
+      </Grid>
+      <ChartCard title="Workload this week" description="Follow-ups due each day, next 7 days" table={{ head: ["Day", "Follow-ups"], rows: dueNextDays(leads, 7, now).map((p) => [p.label, p.value]) }}>
+        <Columns data={dueNextDays(leads, 7, now)} series={[{ key: "value", name: "Follow-ups", color: "var(--viz-1)" }]} height={200} />
+      </ChartCard>
       {groups.map((g) => (
         <section key={g.title} aria-label={g.title}>
           <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">

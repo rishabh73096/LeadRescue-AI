@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowDown, Check, ChevronDown } from "lucide-react";
+import { ArrowDown, ArrowRight, Check, ChevronDown, FileSpreadsheet, Globe, Mail, MessageCircle, Phone } from "lucide-react";
 import { BRAND } from "@/config/site";
 import { Logo } from "@/components/ui/logo";
 import { LogoMark } from "@/components/ui/logo-mark";
@@ -12,14 +12,14 @@ const btnDark = "inline-flex h-12 items-center justify-center gap-2 rounded-full
 const btnLight = "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#f1f1f2] px-7 text-[15px] font-semibold text-ink transition-colors hover:bg-[#e8e8ea]";
 
 export function LandingNav() {
-  const links = [["Features", "#features"], ["How it works", "#how"], ["Pricing", "#pricing"], ["FAQ", "#faq"]];
+  const links = [["Features", "/#features"], ["How it works", "/#how"], ["Pricing", "/#pricing"], ["FAQ", "/#faq"]];
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-[1280px] items-center gap-8 px-5 sm:px-8">
         <Logo />
         <nav className="hidden gap-6 md:flex">
           {links.map(([label, href]) => (
-            <a key={href} href={href} className="text-sm text-slate-600 hover:text-ink">{label}</a>
+            <Link key={href} href={href} className="text-sm text-slate-600 hover:text-ink">{label}</Link>
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
@@ -263,15 +263,71 @@ export function FinalCta({ c }: { c: LandingContent }) {
 }
 
 export function LandingFooter() {
+  const product = [["Features", "/#features"], ["How it works", "/#how"], ["Pricing", "/#pricing"], ["FAQ", "/#faq"]];
+  const channels = [
+    { label: "WhatsApp enquiries", icon: MessageCircle },
+    { label: "Email", icon: Mail },
+    { label: "Website forms", icon: Globe },
+    { label: "Phone calls", icon: Phone },
+    { label: "CSV import", icon: FileSpreadsheet },
+  ];
+  const company = [["Sign in", "/login"], ["Create account", "/signup"], ["Privacy Policy", "/privacy-policy"], ["Terms", "/terms-of-service"]];
+  const colTitle = "text-sm font-semibold text-ink";
+  const link = "text-[15px] text-slate-500 transition-colors hover:text-ink";
+
   return (
-    <footer className="border-t border-slate-100 py-10">
-      <div className={cn(wrap, "flex flex-col items-center justify-between gap-4 text-sm text-slate-500 sm:flex-row")}>
-        <span>© {new Date().getFullYear()} {BRAND.name}. {BRAND.tagline}.</span>
-        <div className="flex gap-5">
-          <Link href="/login" className="hover:text-ink">Sign in</Link>
-          <Link href="/signup" className="hover:text-ink">Create account</Link>
-          <a href="#pricing" className="hover:text-ink">Pricing</a>
+    <footer className="overflow-hidden border-t border-slate-100 bg-white">
+      <div className={cn(wrap, "pt-16")}>
+        <div className="grid gap-12 md:grid-cols-[1.3fr_repeat(3,1fr)]">
+          <div>
+            <Logo />
+            <p className="mt-5 max-w-[280px] text-[17px] leading-relaxed text-slate-500">Recover the enquiries your team forgot to follow up.</p>
+            <Link href="/signup" className={cn(btnDark, "mt-7 h-12 gap-2.5")}>
+              <ArrowRight className="size-4" />
+              Get started
+            </Link>
+            <p className="mt-5 font-mono text-xs text-slate-400">Plans from ₹499/mo · Pay by UPI</p>
+          </div>
+
+          <nav aria-label="Product">
+            <h2 className={colTitle}>Product</h2>
+            <ul className="mt-5 space-y-3.5">
+              {product.map(([label, href]) => <li key={href}><Link href={href} className={link}>{label}</Link></li>)}
+            </ul>
+          </nav>
+
+          <div>
+            <h2 className={colTitle}>Works with</h2>
+            <ul className="mt-5 space-y-3.5">
+              {channels.map(({ label, icon: Icon }) => (
+                <li key={label} className="flex items-center gap-2.5 text-[15px] text-slate-500"><Icon className="size-[18px] text-slate-400" />{label}</li>
+              ))}
+            </ul>
+          </div>
+
+          <nav aria-label="Company">
+            <h2 className={colTitle}>Company</h2>
+            <ul className="mt-5 space-y-3.5">
+              {company.map(([label, href]) => (
+                <li key={label}><Link href={href} className={link}>{label}</Link></li>
+              ))}
+            </ul>
+          </nav>
         </div>
+
+        <div className="mt-14 flex items-center justify-between border-t border-slate-100 pt-8 text-sm text-slate-400">
+          <span>© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</span>
+          <a href="mailto:support@leadrescue.ai" aria-label="Email support" className="flex size-11 items-center justify-center rounded-full bg-[#f1f1f2] text-ink transition-colors hover:bg-[#e8e8ea]">
+            <Mail className="size-[18px]" />
+          </a>
+        </div>
+      </div>
+
+      {/* oversized wordmark that fades into the page */}
+      <div aria-hidden className="pointer-events-none mt-6 select-none text-center">
+        <p className="font-inter -mb-[0.12em] text-[clamp(56px,17.5vw,260px)] leading-[0.9] font-extrabold tracking-[-0.06em] text-[#ededee] [mask-image:linear-gradient(to_bottom,black_25%,transparent_92%)]">
+          {BRAND.prefix.toLowerCase()}
+        </p>
       </div>
     </footer>
   );

@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CalendarPlus, Clock, Repeat, Users } from "lucide-react";
+import { Grid } from "@/components/charts/chart-card";
+import { StatCard } from "@/components/charts/stat-card";
 import { DemoBanner, StatusBadge, Table, Who, fmtDate } from "@/components/admin/admin-ui";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchInput } from "@/components/ui/search-input";
@@ -26,6 +29,12 @@ export function CustomersView() {
     <div className="space-y-6">
       <PageHeader title="Customers" description={`${data.profiles.length} accounts`} />
       <DemoBanner show={data.demo} />
+      <Grid cols={4}>
+        <StatCard icon={Users} label="All customers" value={String(data.profiles.length)} />
+        <StatCard icon={Repeat} label="Paying now" value={String(data.subscriptions.filter((s) => s.status === "active" && new Date(s.current_period_end).getTime() > now).length)} />
+        <StatCard icon={CalendarPlus} label="Joined last 30 days" value={String(data.profiles.filter((p) => now - new Date(p.created_at).getTime() < 30 * 86_400_000).length)} />
+        <StatCard icon={Clock} label="Awaiting verification" value={String(new Set(data.payments.filter((p) => p.status === "pending").map((p) => p.user_id)).size)} />
+      </Grid>
       <SearchInput value={query} onValueChange={setQuery} placeholder="Search name, email, phone" clearable tone="white" className="w-full sm:w-80" />
       <Table head={["Customer", "Phone", "Joined", "Plan", "Status", "Renews / ends"]} empty="No customers match.">
         {rows.map(({ p, sub, pending }) => {

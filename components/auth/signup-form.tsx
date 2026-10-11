@@ -7,7 +7,6 @@ import * as authService from "@/services/auth";
 import { signupSchema } from "@/lib/schemas";
 import { notify } from "@/lib/toast";
 import { useAuthState } from "@/context/AuthContext";
-import { SITE_URL } from "@/config/site";
 import { useForm } from "@/hooks/use-form";
 import { DEFAULT_SIGNUP_ROLE } from "@/config/auth";
 import { BRAND } from "@/config/site";
@@ -99,8 +98,12 @@ export function SignupForm({ next = "/dashboard" }: { next?: string }) {
             />
             <span>
               I agree to the{" "}
-              <a href={`${SITE_URL}/terms-of-service`} target="_blank" rel="noopener noreferrer" className="text-brand underline">
+              <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-brand underline">
                 Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-brand underline">
+                Privacy Policy
               </a>
             </span>
           </label>

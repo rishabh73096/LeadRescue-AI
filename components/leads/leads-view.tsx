@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { AlertTriangle, Pencil, Phone, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ContactRound, IndianRupee, Pencil, Percent, Phone, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ChartCard, Grid } from "@/components/charts/chart-card";
+import { Columns, STAGE_COLORS } from "@/components/charts/charts";
+import { StatCard } from "@/components/charts/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CountTabs } from "@/components/ui/count-tabs";
@@ -13,7 +16,8 @@ import { LeadFormModal } from "@/components/leads/lead-form";
 import { useMounted } from "@/hooks/use-mounted";
 import { useNow } from "@/hooks/use-now";
 import { relativeDay } from "@/lib/date";
-import { formatInr, leadReason, sourceLabel, statusMeta, STATUSES } from "@/lib/leads";
+import { formatInr, isOpen, leadReason, sourceLabel, statusMeta, STATUSES } from "@/lib/leads";
+import { perDay, stageCounts, sum, winRate } from "@/lib/stats";
 import { notify } from "@/lib/toast";
 import { deleteLead, setLeadStatus, useLeads } from "@/services/leads";
 import type { Lead, LeadStatus } from "@/types/lead";
@@ -94,6 +98,10 @@ export function LeadsView() {
 
   if (!mounted) return null;
 
+  const week = perDay(leads, (l) => l.createdAt, 7, now);
+  const rate = winRate(leads);
+  const stages = stageCounts(leads).map((s) => ({ label: s.label, value: s.value, color: STAGE_COLORS[s.key] }));
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -101,6 +109,20 @@ export function LeadsView() {
         description="Every enquiry in one place. Update the status as you reply."
         actions={<Button type="button" variant="brand" size="xl" className="rounded-full px-6" onClick={() => openForm()}><Plus />Add lead</Button>}
       />
+      <Grid cols={4}>
+        <StatCard icon={ContactRound} label="Total leads" value={String(leads.length)} sub={`${leads.filter(isOpen).length} open`} spark={perDay(leads, (l) => l.createdAt, 14, now).map((p) => p.value)} />
+        <StatCard icon={Sparkles} label="New this week" value={String(sum(week.map((p) => p.value)))} sub="Last 7 days" />
+        <StatCard icon={IndianRupee} label="Open value" value={formatInr(sum(leads.filter(isOpen).map((l) => l.value)))} sub="Estimated" />
+        <StatCard icon={Percent} label="Win rate" value={rate === null ? "—" : `${rate}%`} sub="Won of closed" />
+      </Grid>
+      <Grid cols={2}>
+        <ChartCard title="Leads by stage" table={{ head: ["Stage", "Leads"], rows: stages.map((s) => [s.label, s.value]) }}>
+          <Columns data={stages} series={[{ key: "value", name: "Leads", color: "var(--viz-1)" }]} height={180} />
+        </ChartCard>
+        <ChartCard title="Added per day" description="Last 7 days" table={{ head: ["Day", "Leads"], rows: week.map((p) => [p.label, p.value]) }}>
+          <Columns data={week} series={[{ key: "value", name: "Leads", color: "var(--viz-3)" }]} height={180} />
+        </ChartCard>
+      </Grid>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <CountTabs label="Filter by status" tabs={tabs} value={filter} onChange={setFilter} />
         <SearchInput value={query} onValueChange={setQuery} placeholder="Search name, phone, service" clearable tone="white" className="w-full lg:w-72" />
