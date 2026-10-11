@@ -3,10 +3,11 @@
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthState } from "@/context/AuthContext";
+import { GUARDS_ENABLED } from "@/config/auth";
 import { loginUrl } from "@/lib/safe-next";
 import { PageLoader } from "@/components/ui/spinner";
 
-export function RequireAuth({ children }: { children: ReactNode }) {
+function Guard({ children }: { children: ReactNode }) {
   const { status } = useAuthState();
   const router = useRouter();
   const pathname = usePathname();
@@ -17,4 +18,8 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   if (status !== "authenticated") return <PageLoader label={status === "loading" ? "Loading your account…" : "Redirecting to sign in…"} />;
   return <>{children}</>;
+}
+
+export function RequireAuth({ children }: { children: ReactNode }) {
+  return GUARDS_ENABLED ? <Guard>{children}</Guard> : <>{children}</>;
 }

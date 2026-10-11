@@ -1,11 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { GUARDS_ENABLED } from "@/config/auth";
 import { loginUrl, safeNext } from "@/lib/safe-next";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-const PROTECTED = ["/dashboard", "/choose-plan", "/leads", "/pipeline", "/follow-ups", "/replies", "/import", "/settings"];
+const PROTECTED = ["/dashboard", "/choose-plan", "/leads", "/pipeline", "/follow-ups", "/replies", "/import", "/settings", "/admin"];
 const GUEST_ONLY = ["/login", "/signup"];
 
 const matches = (path: string, list: string[]) => list.some((p) => path === p || path.startsWith(`${p}/`));
@@ -39,6 +40,8 @@ export async function updateSession(request: NextRequest) {
     response.cookies.getAll().forEach((c) => res.cookies.set(c));
     return res;
   };
+
+  if (!GUARDS_ENABLED) return response;
 
   if (!user && matches(pathname, PROTECTED)) return redirect(loginUrl(`${pathname}${search}`));
   if (user && matches(pathname, GUEST_ONLY)) return redirect(safeNext(request.nextUrl.searchParams.get("next")));

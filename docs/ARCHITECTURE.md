@@ -8,19 +8,19 @@ AI-assisted enquiry follow-up for small service businesses (first target: cleani
 Browser (Next.js 16, React 19, Tailwind 4)
   app/(auth)/*        login · signup · forgot-password
   app/(dashboard)/*   dashboard · leads · pipeline · follow-ups · replies · import · settings
-        │  Api() axios client (Bearer token + x-api-key)
+        │  Supabase JS (@supabase/ssr): cookie session, RLS-scoped queries
+        │  proxy.ts refreshes the session and guards routes
         ▼
-Backend REST API (pending)           ◄──►  MCP server (pending)
-  auth · workspaces · leads · activities        exposes lead tools to Claude / agents
-  follow-ups · ai-drafts · imports · usage
-        │                                   │
-        ├── MongoDB (tenant-scoped: every doc has workspaceId)
+Supabase (being set up by the owner)  ◄──►  MCP server (pending)
+  Auth · Postgres (RLS per user/workspace)     exposes lead tools to Claude / agents
+  subscriptions · payments · leads · activities
+        │
         └── LLM API (drafts only, per-workspace monthly cap)
 ```
 
 Rule: **AI drafts text; application code owns statuses, dates, reminders, limits.**
 
-## 2. Data model (MongoDB)
+## 2. Data model (Supabase Postgres)
 
 | Collection | Key fields |
 |---|---|
@@ -31,7 +31,9 @@ Rule: **AI drafts text; application code owns statuses, dates, reminders, limits
 | drafts | workspaceId, leadId, language (en/hi), text, edited, sentMarkedAt |
 | imports | workspaceId, filename, rows, created, skipped, errors[] |
 
-Indexes: `{workspaceId, status}`, `{workspaceId, nextFollowUpAt}`, unique `{workspaceId, phone}` (soft).
+Indexes: `(workspace_id, status)`, `(workspace_id, next_follow_up_at)`, unique `(workspace_id, phone)` (soft). Every table has RLS; users only see rows of their own workspace.
+
+Already defined in `supabase/migrations/0001_subscriptions.sql`: `subscriptions` (user_id, plan, status, current_period_end) and `payments` (user_id, plan, amount_inr, upi_ref, status pending/verified/rejected). A trigger activates 30 days of plan when a payment is set to `verified`. Users can read their own rows and insert a pending payment; they cannot activate anything.
 
 ## 3. Core flows
 
@@ -42,7 +44,9 @@ Indexes: `{workspaceId, status}`, `{workspaceId, nextFollowUpAt}`, unique `{work
 4. Owner copies/sends manually, marks Contacted/Quote Sent; activity logged; next follow-up date set.
 5. Won/Lost closes the lead.
 
-**Auth:** signup (creates workspace + owner) → login → token in localStorage → `GET /auth/profile` hydrates `AuthProvider` → dashboard. Forgot password: `sendOTP` → `verifyOTP` → `changePassword`.
+**Auth (Supabase):** signup (`signUp`, name/phone/role in user metadata) → login (`signInWithPassword`) → session cookie → `AuthProvider` listens to `onAuthStateChange`. `proxy.ts` redirects guests away from app routes (`/login?next=…`) and signed-in users away from `/login`, `/signup`. Forgot password: `resetPasswordForEmail` → 6-digit code from the email (`verifyOtp`, type `recovery`) → `updateUser({password})` → sign out → login. The recovery email template must contain `{{ .Token }}`.
+
+**Subscription (India, UPI QR):** `/choose-plan` → pick plan → QR (`upi://pay?pa=<VPA>&am=<₹>&cu=INR`, env `NEXT_PUBLIC_UPI_VPA`) → user pays in any UPI app → enters UTR → `payments` row (`pending`) → owner checks the UPI/bank app and runs `update payments set status='verified' where upi_ref='<UTR>'` → trigger activates the plan → dashboard unlocks (`RequirePlan` reads `subscriptions`). No payment gateway yet; Razorpay is the later upgrade for automatic verification and renewals.
 
 ## 4. Routes
 
@@ -50,16 +54,22 @@ Indexes: `{workspaceId, status}`, `{workspaceId, nextFollowUpAt}`, unique `{work
 |---|---|---|
 | /login /signup /forgot-password | Auth | Done |
 | / | Public landing page | Done |
-| /choose-plan | Plan selection after signup | Prototype |
-| /dashboard | Dashboard placeholder (today's work) | Prototype placeholder |
-| /leads, /leads/[id] | List, filters, detail with activity timeline | Pending |
-| /pipeline | Stage board | Pending |
-| /follow-ups | Overdue / due today / upcoming | Pending |
-| /replies | Draft history, language toggle | Pending |
-| /import | CSV upload and mapping | Pending |
-| /settings | Services, price ranges, usage, plan | Pending |
+| /choose-plan | Plan selection + UPI QR payment + UTR submit | Done (manual verification) |
+| /admin | Platform admin overview: customers, MRR, payments to verify | Done (needs migration 0002) |
+| /admin/payments | Verify or reject UPI payments by UTR | Done |
+| /admin/customers | Accounts with plan and status | Done |
+| /admin/subscriptions | Extend or expire plans, days left | Done |
+| /admin/plans | Read-only plans and UPI receiver | Done |
+| /dashboard | Today's work: stats, needs-a-reply list, pipeline bars, recent activity | Done (UI, local data) |
+| /leads | List, status tabs, search, add/edit/delete, inline status | Done (UI, local data) |
+| /leads/[id] | Lead detail, notes, follow-up presets, activity timeline | Done (UI, local data) |
+| /pipeline | Stage board, drag and drop | Done (UI, local data) |
+| /follow-ups | Overdue / today / upcoming / no date, mark done + next date | Done (UI, local data) |
+| /replies | Draft per lead, EN/HI, edit, copy, WhatsApp link, monthly cap | Done (template drafts; AI endpoint pending) |
+| /import | CSV upload, column mapping, preview, duplicate skip | Done (UI, local data) |
+| /settings | Business, services and prices, plan and usage, account | Done (UI, local data) |
 
-## 5. API (pending)
+## 5. Data access (pending: Supabase queries replace the REST API)
 
 `POST /auth/*` (existing contract) · `GET/POST /leads`, `PATCH /leads/:id`, `POST /leads/:id/status` · `GET /follow-ups?due=overdue|today` · `POST /leads/:id/draft {language}` · `POST /imports/csv` · `GET /usage`.
 
@@ -79,7 +89,15 @@ An MCP server lets Claude (or any agent) operate a workspace while building and 
 
 Resources: `workspace://settings`, `lead://{id}`. Guardrails: workspace-scoped token, no send-message tool, usage cap applies to `draft_reply`.
 
-## 7. Prototype scope (build order)
+## 7. Frontend build order (UI first, one screen at a time)
+
+Backend is Supabase, set up separately. Screens are built against `services/*.ts` local stores so they can be swapped to Supabase queries without UI changes.
+
+All eight workspace screens and the five admin screens are built. `services/leads.ts`, `drafts.ts`, `settings.ts` now read and write Supabase through `lib/collection.ts` (tables from `0003_workspace_data.sql`, RLS by `user_id`). When signed out, or if the tables don't exist yet, they fall back to localStorage demo data. Remaining: connect the AI draft endpoint (replaces `lib/draft-reply.ts`), enforce plan and draft limits server-side, multi-user workspaces (staff roles) which need a `workspace_id` instead of `user_id`.
+
+**Platform admin:** separate from workspace roles (owner/admin/staff). A user is a platform admin only if their id is in `platform_admins` (migration `0002_admin.sql`; RLS enforces it). Admin nav items are hidden from everyone else (`config/navigation.ts`, `usePlatformAdmin`). Admin data comes from `profiles`, `payments`, `subscriptions`; with guards off and no Supabase, pages show sample data.
+
+## 8. Prototype scope (original build order)
 
 1. Backend skeleton + auth + workspace (days 6–8)
 2. Leads CRUD + statuses + activities (9–12)
@@ -88,12 +106,12 @@ Resources: `workspace://settings`, `lead://{id}`. Guardrails: workspace-scoped t
 5. CSV import, usage limits (18–20)
 6. MCP server wrapping the same service layer (parallel, ~1 day)
 
-## 8. Feature status
+## 9. Feature status
 
 | Feature | Status | Where |
 |---|---|---|
-| Auth UI: login, signup, forgot password (OTP, 4-digit, 5 min expiry) | Done | `components/auth/`, `app/(auth)/` |
-| Session: token store, `AuthProvider`, `useAuthState`, 401 handling | Done | `context/AuthContext.tsx`, `lib/api.ts` |
+| Auth on Supabase: login, signup, forgot password (emailed 6-digit code) | Done, untested against live project | `services/auth.ts`, `components/auth/`, `app/(auth)/` |
+| Session: Supabase cookie session, `AuthProvider`, `useAuthState`; route guard in `proxy.ts` | Done | `context/AuthContext.tsx`, `proxy.ts`, `utils/supabase/` |
 | Role hook + role-filtered navigation (owner / admin / staff) | Done | `hooks/use-role.ts`, `config/navigation.ts` |
 | Dashboard shell: topbar, sidebar, page search (Ctrl/Cmd+K), access-denied | Done | `components/dashboard/` |
 | UI kit (forms, tables, modals, tabs, toasts, skeletons, pagination, etc.) | Done | `components/ui/` |
@@ -101,12 +119,15 @@ Resources: `workspace://settings`, `lead://{id}`. Guardrails: workspace-scoped t
 | Security headers / CSP, open-redirect-safe `next` param | Done | `next.config.ts`, `lib/safe-next.ts` |
 | Type-check and production build pass | Done | verified |
 | Landing page: hero, flow demo, feature grid, scenarios, pricing, FAQ, CTA | Done | `app/page.tsx`, `components/landing/`, `config/landing.ts` |
-| Purchase flow: pricing → signup → choose plan → dashboard (plan gate) | Prototype | `app/choose-plan/`, `lib/subscription.ts`; plan stored in browser, no real payment |
+| Purchase flow: pricing → signup → choose plan → UPI QR → UTR → manual verify → dashboard | Done (manual verification) | `components/landing/plan-picker.tsx`, `lib/subscription.ts`, `lib/upi.ts`, `supabase/migrations/` |
+| Workspace screens: leads, lead detail, pipeline, follow-ups, dashboard, AI replies, import, settings | Done, run on local demo data | `components/{leads,pipeline,follow-ups,overview,replies,import,settings}/`, `services/*.ts`, `lib/leads.ts` |
+| Platform admin: overview, payments, customers, subscriptions, plans | Done, sample data until Supabase is connected | `components/admin/`, `services/admin.ts`, `supabase/migrations/0002_admin.sql` |
+| Route/plan guards | Temporarily OFF (`GUARDS_ENABLED=false` in `config/auth.ts`); turn on before launch | `config/auth.ts` |
 | Per-product auth text, SVG art, accent color, logo mark | Done | `data/auth.ts`, `public/images/auth/`, `app/globals.css` |
-| Backend API (auth + data), MongoDB, tenant scoping | Pending | none in repo |
+| Supabase data layer: leads, activities, drafts, settings with RLS | Done in code; owner must run migrations 0001–0003 | `lib/collection.ts`, `services/`, `supabase/migrations/` |
 | Replace auth hero text/imagery and logo mark with real brand | Pending | `data/auth.ts`, `public/images/` |
-| Billing (Razorpay/Stripe), plan limits, usage caps | Pending | |
-| Real billing webhook to activate plan (replaces browser-stored plan) | Pending | |
+| Razorpay (automatic UPI verification, renewals); plan limits and AI usage caps | Pending | manual UPI QR in place |
+| Payment admin screen and renewal reminders | Pending | verification is a SQL update today |
 | MVP 1: Business signup and workspace | Pending | auth UI done; workspace creation needs backend |
 | MVP 2: Add/import leads | Pending | |
 | MVP 3: Lead pipeline and status updates | Pending | |

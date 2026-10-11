@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { clearLocalStores } from "@/lib/local-store";
+import { resetAllData } from "@/lib/collection";
 import { getProfile, logout, normalizeUser } from "@/services/auth";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@/types";
@@ -39,8 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
     // onAuthStateChange fires INITIAL_SESSION on mount, so it also performs the first load.
+    let lastId: string | null | undefined;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") clearLocalStores();
+      // switch the cached workspace data when the signed-in user actually changes
+      const id = session?.user.id ?? null;
+      if (lastId !== undefined && id !== lastId) resetAllData();
+      lastId = id;
       apply(session?.user ? normalizeUser(session.user) : null);
     });
     return () => data.subscription.unsubscribe();

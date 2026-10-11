@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, Headset } from "lucide-react";
-import { NAV_ITEMS } from "@/config/navigation";
+import { visibleNav } from "@/config/navigation";
 import { useRole } from "@/hooks/use-role";
 import { useAuthState } from "@/context/AuthContext";
+import { usePlatformAdmin } from "@/services/admin";
 import { ROLE_LABELS } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import type { DashboardData } from "@/types/dashboard";
@@ -15,6 +16,7 @@ export function Sidebar({ data, onNavigate }: { data: DashboardData; onNavigate?
   const { help } = data;
   const { role } = useRole();
   const { user } = useAuthState();
+  const isAdmin = usePlatformAdmin(user?._id) === true;
   const displayName = user?.businessName || user?.fullName || data.account.name;
 
   return (
@@ -28,8 +30,8 @@ export function Sidebar({ data, onNavigate }: { data: DashboardData; onNavigate?
       </div>
 
       <nav aria-label="Dashboard" className="flex flex-col">
-        {NAV_ITEMS.filter((item) => item.roles.includes(role)).map(({ label, href, icon: Icon, gap }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+        {visibleNav(role, isAdmin).map(({ label, href, icon: Icon, gap }) => {
+          const active = href === "/admin" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}

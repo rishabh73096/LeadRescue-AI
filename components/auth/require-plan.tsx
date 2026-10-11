@@ -2,10 +2,11 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { GUARDS_ENABLED } from "@/config/auth";
 import { useSubscription } from "@/lib/subscription";
 import { PageLoader } from "@/components/ui/spinner";
 
-export function RequirePlan({ children }: { children: ReactNode }) {
+function Guard({ children }: { children: ReactNode }) {
   const { plan, ready } = useSubscription();
   const router = useRouter();
 
@@ -15,4 +16,8 @@ export function RequirePlan({ children }: { children: ReactNode }) {
 
   if (!ready || !plan) return <PageLoader label="Checking your plan…" />;
   return <>{children}</>;
+}
+
+export function RequirePlan({ children }: { children: ReactNode }) {
+  return GUARDS_ENABLED ? <Guard>{children}</Guard> : <>{children}</>;
 }

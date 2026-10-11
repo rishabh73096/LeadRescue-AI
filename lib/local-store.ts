@@ -4,6 +4,8 @@ import { useSyncExternalStore } from "react";
 
 const registeredKeys = new Set<string>();
 
+export const registerLocalKey = (key: string) => void registeredKeys.add(key);
+
 export function clearLocalStores() {
   registeredKeys.forEach((key) => {
     try {

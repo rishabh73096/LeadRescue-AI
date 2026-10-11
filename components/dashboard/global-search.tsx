@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { useRouter } from "next/navigation";
 import { CornerDownLeft, type LucideIcon } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
-import { NAV_ITEMS } from "@/config/navigation";
+import { visibleNav } from "@/config/navigation";
+import { useAuthState } from "@/context/AuthContext";
+import { usePlatformAdmin } from "@/services/admin";
 import { useRole } from "@/hooks/use-role";
 import { ROLE_LABELS } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -22,11 +24,11 @@ interface Result {
 
 const PER_GROUP = 4;
 
-function useSearchIndex(role: Role): Result[] {
+function useSearchIndex(role: Role, isAdmin: boolean): Result[] {
   return useMemo(
     () =>
-      NAV_ITEMS.filter((n) => n.roles.includes(role)).map((n) => ({ id: `page-${n.href}`, group: "Pages", title: n.label, subtitle: n.href === "/" ? "Overview" : n.href, href: n.href, icon: n.icon, haystack: [n.label, ...(n.keywords ?? [])].join(" ").toLowerCase() })),
-    [role],
+      visibleNav(role, isAdmin).map((n) => ({ id: `page-${n.href}`, group: "Pages", title: n.label, subtitle: n.href === "/" ? "Overview" : n.href, href: n.href, icon: n.icon, haystack: [n.label, ...(n.keywords ?? [])].join(" ").toLowerCase() })),
+    [role, isAdmin],
   );
 }
 
@@ -39,7 +41,8 @@ function rank(r: Result, terms: string[]) {
 export function GlobalSearch({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
   const router = useRouter();
   const { role } = useRole();
-  const index = useSearchIndex(role);
+  const { user } = useAuthState();
+  const index = useSearchIndex(role, usePlatformAdmin(user?._id) === true);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
