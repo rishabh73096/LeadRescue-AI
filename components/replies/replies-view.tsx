@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Copy, Languages, MessageCircle, MessageSquareText, Sparkles, UserX } from "lucide-react";
 import { ChartCard, Grid } from "@/components/charts/chart-card";
@@ -11,6 +11,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
 import { Panel, PanelHeader } from "@/components/ui/panel";
 import { TextAreaField } from "@/components/ui/form-field";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useNow } from "@/hooks/use-now";
 import { draftsByLanguage } from "@/lib/stats";
 import { useMounted } from "@/hooks/use-mounted";
@@ -29,6 +30,7 @@ export const MONTHLY_DRAFT_CAP = 100;
 export function RepliesView({ initialLead }: { initialLead?: string }) {
   const mounted = useMounted();
   const now = useNow();
+  const reduced = useReducedMotion();
   const { leads } = useLeads();
   const settings = useSettings();
   const drafts = useDrafts();
@@ -36,6 +38,9 @@ export function RepliesView({ initialLead }: { initialLead?: string }) {
   const [language, setLanguage] = useState<Language | null>(null);
   const [text, setText] = useState("");
   const [copied, setCopied] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
 
   if (!mounted) return null;
 
@@ -48,8 +53,21 @@ export function RepliesView({ initialLead }: { initialLead?: string }) {
     if (!lead) return notify.error("Pick a lead first.");
     if (used >= MONTHLY_DRAFT_CAP) return notify.error(`Monthly draft limit (${MONTHLY_DRAFT_CAP}) reached.`);
     const next = draftReply(lead, l, settings);
-    setText(next);
     saveDraft(lead.id, l, next);
+    if (timer.current) clearInterval(timer.current);
+    if (reduced) return setText(next);
+    // type the draft out so it feels like it is being written
+    setText("");
+    setTyping(true);
+    let i = 0;
+    timer.current = setInterval(() => {
+      i += 3;
+      setText(next.slice(0, i));
+      if (i >= next.length) {
+        if (timer.current) clearInterval(timer.current);
+        setTyping(false);
+      }
+    }, 16);
   };
 
   const copy = async () => {
@@ -109,7 +127,7 @@ export function RepliesView({ initialLead }: { initialLead?: string }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" variant="brand" size="xl" className="rounded-full px-6" onClick={() => generate()} disabled={!lead}><Sparkles />{text ? "Redraft" : "Draft reply"}</Button>
+            <Button type="button" variant="brand" size="xl" className="rounded-full px-6" onClick={() => generate()} disabled={!lead || typing}><Sparkles className={typing ? "animate-spin" : undefined} />{typing ? "Writing…" : text ? "Redraft" : "Draft reply"}</Button>
             <Button type="button" variant="panel" size="xl" className="rounded-full px-6" onClick={copy} disabled={!text}>{copied ? <Check /> : <Copy />}{copied ? "Copied" : "Copy"}</Button>
             {digits && text ? (
               <a href={`https://wa.me/${digits}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer" className="text-brand inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"><MessageCircle className="size-4" />Open in WhatsApp</a>

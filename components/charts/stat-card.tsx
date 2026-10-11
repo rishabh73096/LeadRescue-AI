@@ -13,9 +13,10 @@ import { cn } from "@/lib/utils";
 
 export function StatCard({ icon: Icon, label, value, sub, spark, tone, href }: { icon: LucideIcon; label: string; value: string; sub?: string; spark?: number[]; tone?: "red"; href?: string }) {
   const body = (
-    <m.div variants={cardIn} whileHover={href ? { y: -3 } : undefined} transition={{ type: "spring", stiffness: 400, damping: 30 }} className={cn(PANEL_SURFACE, "viz relative h-full overflow-hidden p-5", href && "transition-shadow hover:shadow-md")}>
-      <span className={cn("flex size-10 items-center justify-center rounded-lg", tone === "red" ? "bg-[#fde0e0] text-[#c2262e]" : "bg-[#e8e6fb] text-[#3b2fd0]")}>
+    <m.div variants={cardIn} whileHover={{ y: -3 }} whileTap={href ? { scale: 0.985 } : undefined} transition={{ type: "spring", stiffness: 400, damping: 30 }} className={cn(PANEL_SURFACE, "viz group relative h-full overflow-hidden p-5 transition-shadow hover:shadow-md", href && "cursor-pointer")}>
+      <span className={cn("relative flex size-10 items-center justify-center rounded-lg transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110", tone === "red" ? "bg-[#fde0e0] text-[#c2262e]" : "bg-[#e8e6fb] text-[#3b2fd0]")}>
         <Icon className="size-[18px]" />
+        {tone === "red" ? <span aria-hidden className="dot-ping absolute -top-1 -right-1 size-2.5 rounded-full bg-[#e5484d]" /> : null}
       </span>
       <p className="font-inter mt-4 text-3xl font-extrabold tracking-[-0.03em] text-ink"><AnimatedValue value={value} /></p>
       <p className="mt-1 text-sm text-slate-500">{label}</p>

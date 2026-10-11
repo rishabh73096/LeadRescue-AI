@@ -41,6 +41,7 @@ export function ImportView() {
   const router = useRouter();
   const { leads } = useLeads();
   const [file, setFile] = useState("");
+  const [over, setOver] = useState(false);
   const [rows, setRows] = useState<string[][]>([]);
   const [map, setMap] = useState<Record<FieldKey, number>>({ name: -1, phone: -1, email: -1, service: -1, message: -1, source: -1 });
 
@@ -112,9 +113,15 @@ export function ImportView() {
       <PageHeader title="Import Leads" description="Upload a CSV, match the columns, and bring in your old enquiries. Duplicate phone numbers are skipped." actions={<Button type="button" variant="panel" size="xl" className="rounded-full px-5" onClick={download}><Download />Sample CSV</Button>} />
 
       <Panel className="p-5 sm:p-6">
-        <label htmlFor="csv" className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 px-6 py-12 text-center hover:border-brand">
-          <span className="bg-brand/10 text-brand flex size-12 items-center justify-center rounded-2xl"><UploadCloud className="size-6" /></span>
-          <span className="text-sm font-semibold text-ink">{file || "Choose a CSV file"}</span>
+        <label
+          htmlFor="csv"
+          onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+          onDragLeave={() => setOver(false)}
+          onDrop={(e) => { e.preventDefault(); setOver(false); onFile(e.dataTransfer.files?.[0]); }}
+          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-all duration-200 hover:border-brand hover:bg-brand/5 active:scale-[0.99] ${over ? "border-brand bg-brand/10 scale-[1.01]" : "border-slate-200"}`}
+        >
+          <span className={`bg-brand/10 text-brand flex size-12 items-center justify-center rounded-2xl transition-transform duration-300 ${over ? "-translate-y-2 scale-110" : ""}`}><UploadCloud className="size-6" /></span>
+          <span className="text-sm font-semibold text-ink">{over ? "Drop it here" : file || "Choose a CSV file or drag it here"}</span>
           <span className="text-xs text-slate-500">First row must be column headers. Up to {MAX_ROWS} rows, 2 MB.</span>
           <input id="csv" type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
         </label>

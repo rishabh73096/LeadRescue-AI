@@ -75,34 +75,34 @@ export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse, ar
           disabled={refreshing}
           title="Refresh page data"
           aria-label="Refresh page data"
-          className="flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 text-xs font-semibold text-slate-200 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+          className="group flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 text-xs font-semibold text-slate-200 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
         >
-          <RotateCw className={cn("size-3.5", refreshing && "animate-spin text-brand-bright")} />
+          <RotateCw className={cn("size-3.5 transition-transform duration-500 group-hover:rotate-180", refreshing && "animate-spin text-brand-bright")} />
           <span className="hidden sm:inline">Refresh</span>
         </button>
 
         <button type="button" aria-label="Search" aria-expanded={mobileSearch} onClick={() => setMobileSearch((v) => !v)} className="flex size-9 items-center justify-center rounded-full hover:bg-white/10 md:hidden">
           <Search className="size-4" />
         </button>
-        <button type="button" aria-label={`Notifications (${data.badges.notifications} unread)`} className="relative flex size-9 items-center justify-center rounded-full hover:bg-white/10">
-          <Bell className="size-4" />
+        <button type="button" aria-label={`Notifications (${data.badges.notifications} unread)`} className="group relative flex size-9 items-center justify-center rounded-full hover:bg-white/10 active:scale-90">
+          <Bell className="bell-shake size-4" />
           {data.badges.notifications ? <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-[#e5484d] text-[10px] font-semibold">{data.badges.notifications}</span> : null}
         </button>
         <span aria-hidden className="hidden h-7 w-px bg-white/15 sm:block" />
 
         <div className="relative">
-          <button type="button" onClick={() => setAccount((v) => !v)} aria-haspopup="menu" aria-expanded={account} className="flex items-center gap-3 rounded-full py-1 pr-1 pl-1 hover:bg-white/10 sm:pr-2">
+          <button type="button" onClick={() => setAccount((v) => !v)} aria-haspopup="menu" aria-expanded={account} className="group flex items-center gap-3 rounded-full py-1 pr-1 pl-1 transition-transform hover:bg-white/10 active:scale-[0.97] sm:pr-2">
             <Avatar name={name} src={data.account.avatar} className="size-10 text-sm ring-2 ring-white/20" />
             <span className="hidden text-left leading-tight sm:block">
               <span className="block max-w-[140px] truncate text-sm font-semibold">{name}</span>
               <span className="block text-xs text-slate-400 ">{roleLabel}</span>
             </span>
-            <ChevronDown className="hidden size-4 text-slate-300 sm:block" />
+            <ChevronDown className={cn("hidden size-4 text-slate-300 transition-transform duration-200 sm:block", account && "rotate-180")} />
           </button>
           {account ? (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setAccount(false)} aria-hidden />
-              <div role="menu" className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-xl bg-white py-1 text-sm text-slate-700 shadow-xl ring-1 ring-slate-100">
+              <div role="menu" className="animate-in fade-in zoom-in-95 slide-in-from-top-1 absolute right-0 z-20 mt-2 w-52 origin-top-right overflow-hidden rounded-xl bg-white py-1 text-sm text-slate-700 shadow-xl ring-1 ring-slate-100 duration-150">
                                 {user ? (
                   <button type="button" role="menuitem" onClick={() => { signOut(); setAccount(false); }} className="flex w-full items-center gap-2 px-4 py-2.5 hover:bg-slate-50">
                     <LogOut className="size-4" /> Sign out

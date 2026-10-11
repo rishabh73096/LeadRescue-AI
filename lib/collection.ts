@@ -42,6 +42,7 @@ const EMPTY = { items: [], loaded: false } as CollectionState<never>;
 export function createCollection<T extends { id: string }>(o: Options<T>) {
   let state: CollectionState<T> = EMPTY as CollectionState<T>;
   let remote = false;
+  let userId: string | null = null;
   let loading: Promise<void> | null = null;
   const listeners = new Set<() => void>();
   registerLocalKey(o.localKey);
@@ -49,6 +50,7 @@ export function createCollection<T extends { id: string }>(o: Options<T>) {
   const commit = (items: T[], loaded = true) => {
     state = { items, loaded };
     listeners.forEach((l) => l());
+    if (loaded) queueMicrotask(() => saveSnapshot());
   };
 
   const saveLocal = () => {
@@ -65,15 +67,40 @@ export function createCollection<T extends { id: string }>(o: Options<T>) {
     return o.seed?.() ?? [];
   };
 
+  // Last data we loaded for this user, so the app still shows their leads with no internet.
+  const snapKey = (userId: string) => `${o.localKey}:snapshot:${userId}`;
+  const saveSnapshot = () => {
+    if (!remote || !userId) return;
+    try {
+      registerLocalKey(snapKey(userId));
+      window.localStorage.setItem(snapKey(userId), JSON.stringify(state.items));
+    } catch {}
+  };
+  const readSnapshot = (id: string): T[] | null => {
+    try {
+      const raw = window.localStorage.getItem(snapKey(id));
+      return raw ? (JSON.parse(raw) as T[]) : null;
+    } catch {
+      return null;
+    }
+  };
+
   async function load() {
-    const userId = await currentUserId();
+    userId = await currentUserId();
     if (userId) {
       const { data, error } = await createClient().from(o.table).select("*");
       if (!error) {
         remote = true;
-        return commit((data as Row[]).map(o.fromRow));
+        commit((data as Row[]).map(o.fromRow));
+        return saveSnapshot();
       }
-      console.warn(`[${o.table}] Supabase unavailable, using local demo data:`, error.message);
+      console.warn(`[${o.table}] Supabase unavailable:`, error.message);
+      // Signed in but unreachable (offline or tables missing): show the last saved copy, never demo data.
+      const snap = readSnapshot(userId);
+      if (snap || (typeof navigator !== "undefined" && !navigator.onLine)) {
+        remote = false;
+        return commit(snap ?? []);
+      }
     }
     remote = false;
     commit(readLocal());

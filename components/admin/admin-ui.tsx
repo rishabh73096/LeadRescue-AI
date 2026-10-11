@@ -30,7 +30,7 @@ export function Who({ profile }: { profile?: Profile }) {
 export function Table({ head, children, empty, className }: { head: string[]; children: ReactNode; empty?: string; className?: string }) {
   const hasRows = Array.isArray(children) ? children.length > 0 : Boolean(children);
   return (
-    <div className={cn(PANEL_SURFACE, "overflow-hidden", className)}>
+    <div className={cn(PANEL_SURFACE, "rows-in overflow-hidden", className)}>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
@@ -38,7 +38,7 @@ export function Table({ head, children, empty, className }: { head: string[]; ch
               {head.map((h) => <th key={h} className="px-4 py-3.5">{h}</th>)}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 [&_tr]:transition-colors [&_tr]:duration-150 [&_tr:hover]:bg-slate-50/70">
             {hasRows ? children : <tr><td colSpan={head.length} className="px-4 py-12 text-center text-sm text-slate-400">{empty ?? "Nothing here yet."}</td></tr>}
           </tbody>
         </table>

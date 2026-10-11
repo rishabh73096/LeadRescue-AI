@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuthState } from "@/context/AuthContext";
+import { registerLocalKey } from "@/lib/local-store";
 import { createClient } from "@/utils/supabase/client";
 
 export interface PendingPayment {
@@ -25,13 +26,27 @@ export function useSubscription() {
       return;
     }
     const supabase = createClient();
-    const [sub, pay] = await Promise.all([
-      supabase.from("subscriptions").select("plan,status,current_period_end").eq("user_id", id).maybeSingle(),
-      supabase.from("payments").select("plan,upi_ref").eq("user_id", id).eq("status", "pending").order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    ]);
-    const active = sub.data && sub.data.status === "active" && new Date(sub.data.current_period_end) > new Date();
-    setPlan(active ? sub.data!.plan : null);
-    setPending(pay.data ?? null);
+    const snapKey = `plan:snapshot:${id}`;
+    try {
+      const [sub, pay] = await Promise.all([
+        supabase.from("subscriptions").select("plan,status,current_period_end").eq("user_id", id).maybeSingle(),
+        supabase.from("payments").select("plan,upi_ref").eq("user_id", id).eq("status", "pending").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      ]);
+      if (sub.error || pay.error) throw sub.error ?? pay.error;
+      const active = sub.data && sub.data.status === "active" && new Date(sub.data.current_period_end) > new Date();
+      setPlan(active ? sub.data!.plan : null);
+      setPending(pay.data ?? null);
+      try {
+        registerLocalKey(snapKey);
+        window.localStorage.setItem(snapKey, JSON.stringify({ plan: active ? sub.data!.plan : null, end: sub.data?.current_period_end ?? null }));
+      } catch {}
+    } catch {
+      // Offline or Supabase unreachable: keep the last known plan so users are not bounced to "choose a plan".
+      try {
+        const snap = JSON.parse(window.localStorage.getItem(snapKey) || "null") as { plan: string | null; end: string | null } | null;
+        if (snap) setPlan(snap.plan && snap.end && new Date(snap.end) > new Date() ? snap.plan : null);
+      } catch {}
+    }
   }, [id]);
 
   useEffect(() => {

@@ -43,7 +43,7 @@ export function DataTable<T>({ columns, rows, rowId, pageSize = 7, selectable = 
     });
 
   return (
-    <div className={cn("overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_12px_-6px_rgba(15,17,41,0.12)]", className)}>
+    <div className={cn("rows-in overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_12px_-6px_rgba(15,17,41,0.12)]", className)}>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead>
@@ -71,7 +71,7 @@ export function DataTable<T>({ columns, rows, rowId, pageSize = 7, selectable = 
               visible.map((row) => {
                 const id = rowId(row);
                 return (
-                  <tr key={id} data-selected={selected.has(id) || undefined} className={cn("transition-colors hover:bg-slate-50/50 data-[selected]:bg-brand-soft/30", rowClassName?.(row))}>
+                  <tr key={id} data-selected={selected.has(id) || undefined} className={cn("transition-colors duration-150 hover:bg-slate-50 data-[selected]:bg-brand-soft/30", rowClassName?.(row))}>
                     {selectable ? (
                       <td className="py-4 pr-2 pl-5">
                         <Checkbox aria-label="Select row" checked={selected.has(id)} onCheckedChange={(c) => toggle([id], c === true)} />

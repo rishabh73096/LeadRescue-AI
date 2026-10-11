@@ -54,7 +54,7 @@ function SettingsForm({ saved }: { saved: WorkspaceSettings }) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" description="Your business details are used when drafting replies." actions={<Button type="button" variant="brand" size="xl" className="rounded-full px-6" disabled={!dirty} onClick={save}>Save changes</Button>} />
+      <PageHeader title="Settings" description="Your business details are used when drafting replies." actions={<>{dirty ? <span className="animate-in fade-in slide-in-from-right-2 flex items-center gap-2 text-xs font-medium text-slate-500"><span className="dot-ping size-2 rounded-full bg-amber-400" />Unsaved changes</span> : null}<Button type="button" variant="brand" size="xl" className="rounded-full px-6" disabled={!dirty} onClick={save}>Save changes</Button></>} />
 
       <Grid cols={3}>
         <StatCard icon={ListChecks} label="Services listed" value={String(saved.services.length)} />
@@ -87,7 +87,7 @@ function SettingsForm({ saved }: { saved: WorkspaceSettings }) {
         <PanelHeader title="Services and price ranges" description="Drafts quote these. Leave a price empty to skip it." aside={<Button type="button" variant="soft" size="lg" className="h-9 rounded-full px-4" onClick={() => setS((p) => ({ ...p, services: [...p.services, { name: "", price: "" }] }))}><Plus />Add</Button>} />
         <ul className="mt-5 space-y-3">
           {s.services.map((x, i) => (
-            <li key={i} className="grid grid-cols-[1fr_auto] gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <li key={i} className="animate-in fade-in slide-in-from-top-2 grid grid-cols-[1fr_auto] gap-3 duration-300 sm:grid-cols-[1fr_1fr_auto]">
               <TextField aria-label="Service name" value={x.name} onChange={(e) => setService(i, { name: e.target.value.slice(0, 80) })} placeholder="Service" />
               <TextField aria-label="Price range" value={x.price} onChange={(e) => setService(i, { price: e.target.value.slice(0, 40) })} placeholder="₹2,000 – ₹5,000" className="col-span-2 row-start-2 sm:col-span-1 sm:row-start-auto" />
               <Button type="button" variant="ghost" size="icon" className="size-11" aria-label="Remove service" onClick={() => setS((p) => ({ ...p, services: p.services.filter((_, j) => j !== i) }))}><Trash2 /></Button>

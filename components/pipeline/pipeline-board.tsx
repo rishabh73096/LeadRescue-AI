@@ -15,12 +15,14 @@ import { formatInr, isOpen, leadReason, STATUSES, statusMeta } from "@/lib/leads
 import { stageValues, sum, winRate } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 import { notify } from "@/lib/toast";
+import { useFlashing } from "@/lib/flash";
 import { setLeadStatus, useLeads } from "@/services/leads";
 import type { Lead, LeadStatus } from "@/types/lead";
 
 export function PipelineBoard() {
   const mounted = useMounted();
   const now = useNow();
+  const flashing = useFlashing();
   const { leads } = useLeads();
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<LeadStatus | null>(null);
@@ -65,7 +67,7 @@ export function PipelineBoard() {
               </header>
               <div className="flex min-h-24 flex-col gap-2.5">
                 {items.length === 0 ? <p className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">Drop leads here</p> : null}
-                {items.map((l) => <Card key={l.id} lead={l} reason={leadReason(l, now)} dragging={dragId === l.id} onDragStart={() => setDragId(l.id)} onDragEnd={() => { setDragId(null); setOver(null); }} onMove={(st) => move(l.id, st)} />)}
+                {items.map((l) => <Card key={l.id} lead={l} reason={leadReason(l, now)} dragging={dragId === l.id} flashing={flashing.has(l.id)} onDragStart={() => setDragId(l.id)} onDragEnd={() => { setDragId(null); setOver(null); }} onMove={(st) => move(l.id, st)} />)}
               </div>
             </section>
           );
@@ -78,9 +80,9 @@ export function PipelineBoard() {
   );
 }
 
-function Card({ lead, reason, dragging, onDragStart, onDragEnd, onMove }: { lead: Lead; reason: string | null; dragging: boolean; onDragStart: () => void; onDragEnd: () => void; onMove: (s: LeadStatus) => void }) {
+function Card({ lead, reason, dragging, flashing, onDragStart, onDragEnd, onMove }: { lead: Lead; reason: string | null; dragging: boolean; flashing: boolean; onDragStart: () => void; onDragEnd: () => void; onMove: (s: LeadStatus) => void }) {
   return (
-    <article draggable onDragStart={onDragStart} onDragEnd={onDragEnd} className={cn("cursor-grab rounded-xl border border-slate-100 bg-white p-3.5 shadow-sm active:cursor-grabbing", dragging && "opacity-40")}>
+    <article draggable onDragStart={onDragStart} onDragEnd={onDragEnd} className={cn("animate-in fade-in zoom-in-95 cursor-grab rounded-xl border border-slate-100 bg-white p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing", dragging && "rotate-2 scale-105 opacity-60 shadow-xl", flashing && "row-flash")}>
       <Link href={`/leads/${lead.id}`} className="block text-sm font-semibold text-ink hover:text-brand">{lead.name}</Link>
       <p className="mt-0.5 truncate text-xs text-slate-500">{lead.service || "No service"}</p>
       {lead.value ? <p className="mt-2 text-xs font-semibold text-ink">{formatInr(lead.value)}</p> : null}

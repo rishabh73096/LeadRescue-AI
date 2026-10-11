@@ -19,6 +19,7 @@ import { relativeDay } from "@/lib/date";
 import { formatInr, isOpen, leadReason, sourceLabel, statusMeta, STATUSES } from "@/lib/leads";
 import { perDay, stageCounts, sum, winRate } from "@/lib/stats";
 import { notify } from "@/lib/toast";
+import { useFlashing } from "@/lib/flash";
 import { deleteLead, setLeadStatus, useLeads } from "@/services/leads";
 import type { Lead, LeadStatus } from "@/types/lead";
 
@@ -27,6 +28,7 @@ type Filter = "all" | LeadStatus;
 export function LeadsView() {
   const mounted = useMounted();
   const now = useNow();
+  const flashing = useFlashing();
   const { leads, loaded } = useLeads();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
@@ -133,6 +135,7 @@ export function LeadsView() {
         rowId={(l) => l.id}
         selectable={false}
         pageSize={8}
+        rowClassName={(l) => (flashing.has(l.id) ? "row-flash" : undefined)}
         emptyMessage={!loaded ? "Loading leads…" : leads.length ? "No leads match these filters." : "No leads yet. Add your first enquiry."}
         footerLabel={({ from, to, total }) => <>Showing <b className="text-ink">{from}–{to}</b> of <b className="text-ink">{total}</b> leads</>}
       />

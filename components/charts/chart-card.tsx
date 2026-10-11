@@ -21,14 +21,14 @@ export interface TableView {
 export function ChartCard({ title, description, legend, table, children, className }: { title: string; description?: string; legend?: LegendItem[]; table?: TableView; children: ReactNode; className?: string }) {
   const [asTable, setAsTable] = useState(false);
   return (
-    <m.div variants={cardIn} className={cn(PANEL_SURFACE, "viz flex min-w-0 flex-col p-5 sm:p-6", className)}>
+    <m.div variants={cardIn} className={cn(PANEL_SURFACE, "viz flex min-w-0 flex-col p-5 transition-shadow duration-300 hover:shadow-md sm:p-6", className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-base font-bold text-ink">{title}</h2>
           {description ? <p className="mt-0.5 text-sm text-slate-500">{description}</p> : null}
         </div>
         {table ? (
-          <button type="button" aria-pressed={asTable} aria-label="Toggle table view" onClick={() => setAsTable((v) => !v)} className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100", asTable && "bg-slate-100 text-ink")}>
+          <button type="button" aria-pressed={asTable} aria-label="Toggle table view" onClick={() => setAsTable((v) => !v)} className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-all hover:bg-slate-100 active:scale-90", asTable && "bg-slate-100 text-ink")}>
             <Table2 className="size-4" />
           </button>
         ) : null}
@@ -43,7 +43,7 @@ export function ChartCard({ title, description, legend, table, children, classNa
           ))}
         </ul>
       ) : null}
-      <div className="mt-4 min-h-0 flex-1">
+      <div key={asTable ? "table" : "chart"} className="animate-in fade-in slide-in-from-bottom-1 mt-4 min-h-0 flex-1 duration-300">
         {asTable && table ? (
           <div className="max-h-[260px] overflow-auto">
             <table className="w-full text-left text-sm">

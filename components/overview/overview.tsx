@@ -88,7 +88,7 @@ export function Overview() {
             <ul className="mt-4 divide-y divide-slate-100">
               {attention.slice(0, 6).map(({ lead, reason }) => (
                 <li key={lead.id}>
-                  <Link href={`/leads/${lead.id}`} className="flex items-center justify-between gap-3 py-3 hover:opacity-80">
+                  <Link href={`/leads/${lead.id}`} className="group flex items-center justify-between gap-3 py-3 transition-transform duration-200 hover:translate-x-1">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-ink">{lead.name}</p>
                       <p className="truncate text-xs text-slate-500">{lead.service || "No service"}</p>

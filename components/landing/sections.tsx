@@ -10,7 +10,7 @@ import { Float, Reveal } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 import type { BentoItem, LandingContent } from "@/types/landing";
 
-const wrap = "mx-auto w-full max-w-[1120px] px-5 sm:px-8";
+const wrap = "mx-auto w-full max-w-7xl px-5 sm:px-8";
 const btnDark = "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-7 text-[15px] font-semibold text-white transition-colors";
 const btnLight = "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#f1f1f2] px-7 text-[15px] font-semibold text-ink transition-colors hover:bg-[#e8e8ea]";
 
@@ -18,7 +18,7 @@ export function LandingNav() {
   const links = [["Features", "/#features"], ["How it works", "/#how"], ["Pricing", "/#pricing"], ["FAQ", "/#faq"]];
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[1280px] items-center gap-8 px-5 sm:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-8 px-5 sm:px-8">
         <Logo />
         <nav className="hidden gap-6 md:flex">
           {links.map(([label, href]) => (
@@ -68,7 +68,7 @@ export function Hero({ c }: { c: LandingContent }) {
 
 export function HowItWorks({ c }: { c: LandingContent }) {
   return (
-    <section id="how" className={cn(wrap, "max-w-[1240px] scroll-mt-20 py-16")}>
+    <section id="how" className={cn(wrap, "cv-auto scroll-mt-20 py-16")}>
       <Reveal className="mx-auto mb-12 max-w-[640px] text-center">
         <h2 className="font-inter text-4xl font-extrabold tracking-[-0.04em] text-ink sm:text-5xl">{c.flow.title}</h2>
         <p className="mt-4 text-lg leading-8 text-slate-500">{c.flow.sub}</p>
@@ -144,7 +144,7 @@ const BENTO_SPANS = [
 
 export function Bento({ c }: { c: LandingContent }) {
   return (
-    <section id="features" className={cn(wrap, "scroll-mt-20 py-16")}>
+    <section id="features" className={cn(wrap, "cv-auto scroll-mt-20 py-16")}>
       <Reveal className="mx-auto mb-12 max-w-[640px] text-center">
         <h2 className="font-inter text-4xl font-extrabold tracking-[-0.04em] text-ink sm:text-5xl">{c.bento.title}</h2>
         <p className="mt-4 text-lg leading-8 text-slate-500">{c.bento.sub}</p>
@@ -159,7 +159,7 @@ export function Bento({ c }: { c: LandingContent }) {
 export function Audience({ c }: { c: LandingContent }) {
   const a = c.audience;
   return (
-    <section className={cn(wrap, "py-16")}>
+    <section className={cn(wrap, "cv-auto py-16")}>
       <Reveal className="mx-auto mb-12 text-center">
         <p className="text-xs text-slate-400">{a.eyebrow}</p>
         <h2 className="font-inter mt-3 text-4xl font-extrabold tracking-[-0.045em] text-ink sm:text-5xl">{a.title}<br /><span className="text-slate-400">{a.titleMuted}</span></h2>
@@ -183,7 +183,7 @@ export function Audience({ c }: { c: LandingContent }) {
 export function Pricing({ c }: { c: LandingContent }) {
   const p = c.pricing;
   return (
-    <section id="pricing" className={cn(wrap, "scroll-mt-20 py-16")}>
+    <section id="pricing" className={cn(wrap, "cv-auto scroll-mt-20 py-16")}>
       <Reveal className="mx-auto mb-12 max-w-[560px] text-center">
         <h2 className="font-inter text-4xl font-extrabold tracking-[-0.04em] text-ink sm:text-6xl">{p.title}</h2>
         <p className="mt-4 text-slate-500">{p.sub}</p>
@@ -210,7 +210,8 @@ export function Pricing({ c }: { c: LandingContent }) {
 
 export function Faq({ c }: { c: LandingContent }) {
   return (
-    <section id="faq" className={cn(wrap, "max-w-[760px] scroll-mt-20 py-16")}>
+    <section id="faq" className={cn(wrap, "cv-auto scroll-mt-20 py-16")}>
+      <div className="mx-auto max-w-[760px]">
       <h2 className="font-inter mb-8 text-center text-4xl font-extrabold tracking-[-0.04em] text-ink">Questions</h2>
       <div className="space-y-2">
         {c.faq.map((f) => (
@@ -222,13 +223,14 @@ export function Faq({ c }: { c: LandingContent }) {
           </details>
         ))}
       </div>
+      </div>
     </section>
   );
 }
 
 export function FinalCta({ c }: { c: LandingContent }) {
   return (
-    <section className={cn(wrap, "py-16")}>
+    <section className={cn(wrap, "cv-auto py-16")}>
       <Reveal className="rounded-[2.5rem] bg-ink px-6 py-16 text-center text-white">
         <Float className="mx-auto w-fit"><LogoMark className="size-14" /></Float>
         <h2 className="font-inter mx-auto mt-6 max-w-[620px] text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl">{c.cta.title}</h2>
@@ -253,10 +255,10 @@ export function LandingFooter() {
   const link = "inline-block text-[15px] text-slate-500 transition-all duration-200 hover:translate-x-1 hover:text-ink";
 
   return (
-    <footer className="overflow-hidden border-t border-slate-100 bg-white">
+    <footer className="cv-auto overflow-hidden border-t border-slate-100 bg-white">
       <div className={cn(wrap, "pt-16")}>
-        <div className="grid gap-12 md:grid-cols-[1.3fr_repeat(3,1fr)]">
-          <div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.3fr_repeat(3,1fr)] md:gap-12">
+          <div className="col-span-2 md:col-span-1">
             <Logo />
             <p className="mt-5 max-w-[280px] text-[17px] leading-relaxed text-slate-500">Recover the enquiries your team forgot to follow up.</p>
             <PressLink href="/signup" className={cn(btnDark, "group mt-7 h-12 gap-2.5")}>

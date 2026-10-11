@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { ComponentProps, ReactNode } from "react";
+import { useRef, type ComponentProps, type ReactNode } from "react";
+import { useInView } from "motion/react";
 import * as m from "motion/react-m";
 
 const SPRING = { type: "spring", stiffness: 420, damping: 26 } as const;
@@ -38,7 +39,7 @@ export function HoverLift({ children, className, delay = 0, lift = 5 }: { childr
 // Headline tile: floats on its own, straightens and pops on hover, spins on click.
 export function HeroTile({ children, tilt, phase = 0, className, style }: { children: ReactNode; tilt: number; phase?: number; className?: string; style?: React.CSSProperties }) {
   return (
-    <m.span aria-hidden className="inline-flex align-[-0.12em]" animate={{ y: [0, -6, 0] }} transition={{ duration: 3.6 + phase * 0.5, repeat: Infinity, ease: "easeInOut", delay: phase * 0.4 }}>
+    <span aria-hidden className="tile-float inline-flex align-[-0.12em]" style={{ animationDuration: `${3.6 + phase * 0.5}s`, animationDelay: `${phase * 0.4}s` }}>
       <m.span
         className={className}
         style={style}
@@ -50,7 +51,7 @@ export function HeroTile({ children, tilt, phase = 0, className, style }: { chil
       >
         {children}
       </m.span>
-    </m.span>
+    </span>
   );
 }
 
@@ -63,10 +64,12 @@ export function PopIcon({ children, className, scale = 1.12 }: { children: React
   );
 }
 
-// Equaliser bars. Motion is CSS (see .wave-bar in globals.css) and speeds up when the parent `.group` is hovered.
+// Equaliser bars. Motion is CSS (see .wave-bar in globals.css), speeds up on hover and pauses when off screen.
 export function WaveBars({ heights, className }: { heights: number[]; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
   return (
-    <div className={className} aria-hidden>
+    <div ref={ref} className={className} style={{ ["--play" as string]: inView ? "running" : "paused" }} aria-hidden>
       {heights.map((h, i) => (
         <span key={i} className="wave-bar w-[5px] rounded-full bg-ink" style={{ height: `${h}%`, ["--i" as string]: i }} />
       ))}

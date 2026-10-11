@@ -75,7 +75,7 @@ function Row({ lead, now }: { lead: Lead; now: number }) {
     notify.success(`${lead.name}: next follow-up in ${days} day${days > 1 ? "s" : ""}`);
   };
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 p-4">
+    <div className="animate-in fade-in slide-in-from-left-2 flex flex-wrap items-center gap-x-4 gap-y-3 p-4 transition-colors duration-150 hover:bg-slate-50/70">
       <div className="min-w-0 flex-1 basis-56">
         <Link href={`/leads/${lead.id}`} className="inline-flex items-center gap-1 font-semibold text-ink hover:text-brand">
           {lead.name}<ChevronRight className="size-3.5 text-slate-400" />

@@ -1,5 +1,6 @@
 "use client";
 
+import { flash } from "@/lib/flash";
 import { createCollection } from "@/lib/collection";
 import { seedLeads } from "@/data/leads";
 import { DAY_MS } from "@/lib/date";
@@ -52,6 +53,7 @@ export function addLead(input: LeadInput): Lead {
   const now = stamp();
   const lead: Lead = { ...input, id: crypto.randomUUID(), status: "new", createdAt: now, updatedAt: now };
   leads.insert([lead]);
+  flash([lead.id]);
   logActivity(lead.id, "created", "Lead added");
   return lead;
 }
@@ -61,12 +63,14 @@ export function addLeads(inputs: LeadInput[]): number {
   const created = inputs.map((i): Lead => ({ ...i, id: crypto.randomUUID(), status: "new", createdAt: now, updatedAt: now }));
   if (created.length === 0) return 0;
   leads.insert(created);
+  flash(created.map((l) => l.id));
   activities.insert(created.map((l): Activity => ({ id: crypto.randomUUID(), leadId: l.id, type: "created", body: "Imported from CSV", at: now })));
   return created.length;
 }
 
 export function updateLead(id: string, patch: Partial<LeadInput>) {
   leads.replace(id, (l) => ({ ...l, ...patch, updatedAt: stamp() }));
+  flash([id]);
   logActivity(id, "edit", "Details updated");
 }
 
@@ -74,6 +78,7 @@ export function setLeadStatus(id: string, status: LeadStatus) {
   const current = find(id);
   if (!current || current.status === status) return;
   leads.replace(id, (l) => ({ ...l, status, updatedAt: stamp(), nextFollowUpAt: status === "won" || status === "lost" ? null : l.nextFollowUpAt }));
+  flash([id]);
   logActivity(id, "status", `Status changed to ${statusMeta(status).label}`);
 }
 

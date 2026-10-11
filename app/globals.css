@@ -293,3 +293,42 @@
 @media (prefers-reduced-motion: reduce) {
   .wave-bar, .flow-line { animation: none; }
 }
+
+/* Dashboard micro-interactions */
+@keyframes row-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes row-flash { 0% { background-color: rgba(15, 157, 117, 0.24); } 100% { background-color: transparent; } }
+@keyframes bell-shake { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-16deg); } 45% { transform: rotate(14deg); } 70% { transform: rotate(-8deg); } }
+@keyframes ping-soft { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(2.6); opacity: 0; } }
+.rows-in tbody tr { animation: row-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.rows-in tbody tr:nth-child(1) { animation-delay: 0.04s; }
+.rows-in tbody tr:nth-child(2) { animation-delay: 0.08s; }
+.rows-in tbody tr:nth-child(3) { animation-delay: 0.12s; }
+.rows-in tbody tr:nth-child(4) { animation-delay: 0.16s; }
+.rows-in tbody tr:nth-child(5) { animation-delay: 0.20s; }
+.rows-in tbody tr:nth-child(6) { animation-delay: 0.24s; }
+.rows-in tbody tr:nth-child(7) { animation-delay: 0.28s; }
+.rows-in tbody tr:nth-child(8) { animation-delay: 0.32s; }
+.rows-in tbody tr:nth-child(9) { animation-delay: 0.36s; }
+.rows-in tbody tr:nth-child(10) { animation-delay: 0.40s; }
+.rows-in tbody tr:nth-child(11) { animation-delay: 0.44s; }
+.rows-in tbody tr:nth-child(12) { animation-delay: 0.48s; }
+.row-flash { animation: row-flash 2.2s ease-out; }
+.group:hover .bell-shake { animation: bell-shake 0.6s ease-in-out; transform-origin: 50% 15%; }
+.dot-ping { position: relative; }
+.dot-ping::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: ping-soft 1.8s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .rows-in tbody tr, .row-flash, .dot-ping::after, .group:hover .bell-shake { animation: none; }
+}
+
+/* Performance: smooth anchors, skip rendering off-screen sections, CSS-only idle motion */
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+.cv-auto { content-visibility: auto; contain-intrinsic-size: auto 760px; }
+@keyframes tile-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.tile-float { animation: tile-float 4s ease-in-out infinite; }
+.wave-bar, .flow-line { animation-play-state: var(--play, running); }
+@media (prefers-reduced-motion: reduce) { .tile-float { animation: none; } }
+
+/* New list rows grow open (height 0 -> auto) so the rows below glide down without overlapping */
+@keyframes row-expand { from { grid-template-rows: 0fr; opacity: 0; transform: translateX(-16px); } to { grid-template-rows: 1fr; opacity: 1; transform: none; } }
+.row-expand { display: grid; animation: row-expand 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) { .row-expand { animation: none; } }

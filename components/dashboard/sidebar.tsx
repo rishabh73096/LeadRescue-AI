@@ -29,7 +29,7 @@ export function Sidebar({ data, onNavigate, area = "workspace" }: { data: Dashbo
       </div>
 
       <nav aria-label={isAdminArea ? "Admin console" : "Dashboard"} className="flex flex-col">
-        {visibleNav(role, area).map(({ label, href, icon: Icon, gap }) => {
+        {visibleNav(role, area).map(({ label, href, icon: Icon, gap }, idx) => {
           const active = href === "/admin" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
@@ -37,13 +37,14 @@ export function Sidebar({ data, onNavigate, area = "workspace" }: { data: Dashbo
               href={href}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
+              style={{ animationDelay: `${idx * 45}ms`, animationFillMode: "both" }}
               className={cn(
-                "flex items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] transition-colors",
+                "group relative flex items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] transition-all duration-200 animate-in fade-in slide-in-from-left-2 duration-300 active:scale-[0.98]",
                 gap && "mt-4",
-                active ? "bg-[#e1f5ee] font-semibold text-brand" : "text-slate-600 hover:bg-slate-50 hover:text-ink",
+                active ? "bg-[#e1f5ee] font-semibold text-brand before:absolute before:top-2.5 before:bottom-2.5 before:left-0 before:w-1 before:rounded-full before:bg-brand" : "text-slate-600 hover:translate-x-1 hover:bg-slate-50 hover:text-ink",
               )}
             >
-              <Icon className="size-[18px] shrink-0" />
+              <Icon className="size-[18px] shrink-0 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-125" />
               <span className="flex-1 truncate">{label}</span>
             </Link>
           );

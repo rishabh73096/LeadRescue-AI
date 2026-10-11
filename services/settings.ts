@@ -34,9 +34,22 @@ async function load() {
     if (!error) {
       remote = true;
       value = { ...DEFAULT_SETTINGS, ...((data?.data as Partial<WorkspaceSettings>) ?? {}) };
+      try {
+        registerLocalKey(`${KEY}:snapshot:${userId}`);
+        window.localStorage.setItem(`${KEY}:snapshot:${userId}`, JSON.stringify(value));
+      } catch {}
       return emit();
     }
-    console.warn("[workspace_settings] Supabase unavailable, using local data:", error.message);
+    console.warn("[workspace_settings] Supabase unavailable:", error.message);
+    try {
+      // signed in but offline: last saved copy
+      const raw = window.localStorage.getItem(`${KEY}:snapshot:${userId}`);
+      if (raw || !navigator.onLine) {
+        remote = false;
+        value = raw ? { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<WorkspaceSettings>) } : DEFAULT_SETTINGS;
+        return emit();
+      }
+    } catch {}
   }
   remote = false;
   try {

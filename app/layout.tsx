@@ -4,18 +4,23 @@ import { GlobalLoader } from "@/components/ui/global-loader";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MotionProvider } from "@/components/providers/motion-provider";
-import { AuthProvider } from "@/context/AuthContext";
+import { OfflineNotice } from "@/components/providers/offline-notice";
+import { SwRegister } from "@/components/providers/sw-register";
 import "./globals.css";
 import { BRAND, SEO, SITE_URL } from "@/config/site";
 
 const averiaSans = Averia_Sans_Libre({
   variable: "--font-averia-sans",
+  preload: false,
+  display: "swap",
   weight: ["400"],
   subsets: ["latin"],
 });
 
 const averiaSerif = Averia_Serif_Libre({
   variable: "--font-averia-serif",
+  preload: false,
+  display: "swap",
   weight: ["400", "700"],
   subsets: ["latin"],
 });
@@ -60,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en-IN"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={`${averiaSans.variable} ${averiaSerif.variable} ${montserrat.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="bg-background text-foreground min-h-full flex flex-col">
@@ -71,11 +77,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           disableTransitionOnChange
         >
           <MotionProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          {children}
           </MotionProvider>
           <GlobalLoader />
+          <OfflineNotice />
+          <SwRegister />
           <Toaster closeButton position="top-right" />
         </ThemeProvider>
       </body>

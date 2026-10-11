@@ -169,7 +169,7 @@ export function FlowDemo() {
         </div>
 
         <div className="relative hidden md:block" aria-hidden>
-          <svg className="absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <svg className="absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ ["--play" as string]: inView ? "running" : "paused" }}>
             {sources.map((s, i) => {
               const y1 = ((i + 0.5) / n) * 100;
               const y2 = endY(i);
@@ -208,65 +208,60 @@ export function FlowDemo() {
         </div>
 
         <div className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_20px_50px_-24px_rgba(0,0,0,0.25)]">
-          <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-            <LogoMark className="size-8" />
-            <p className="text-sm font-bold text-ink">{panel.title}</p>
-            <span className="text-xs text-slate-400">{panel.scope}</span>
-            <span className="ml-auto flex items-center gap-2 text-xs font-bold text-[#e5484d]">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-4 sm:gap-3 sm:px-5">
+            <LogoMark className="size-8 shrink-0" />
+            <p className="truncate text-sm font-bold text-ink">{panel.title}</p>
+            <span className="hidden text-xs whitespace-nowrap text-slate-400 lg:inline">{panel.scope}</span>
+            <span className="ml-auto flex shrink-0 items-center gap-2 text-xs font-bold whitespace-nowrap text-[#e5484d]">
               <AnimatePresence>
                 {added > 0 ? (
-                  <m.span key={added} initial={{ opacity: 0, scale: 0.5, y: 4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.8 }} className="bg-brand/10 text-brand rounded-full px-2 py-0.5 text-[10px]">
+                  <m.span key={added} initial={{ opacity: 0, scale: 0.5, y: 4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.8 }} className="bg-brand/10 text-brand rounded-full px-2 py-0.5 text-[10px] whitespace-nowrap">
                     +{added} new
                   </m.span>
                 ) : null}
               </AnimatePresence>
-              <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-[#e5484d]" />{panel.badge}</span>
+              <span className="flex items-center gap-1.5"><span className="size-1.5 shrink-0 rounded-full bg-[#e5484d]" />{panel.badge}</span>
             </span>
           </div>
           <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-5 py-3 text-xs text-slate-600">
             <Pin className="size-3.5 text-slate-400" /> <span className="truncate"><b className="text-ink">Pinned</b> · {panel.pinned}</span>
           </div>
-          <div className="flex flex-1 items-start px-4 py-4">
-            {/* Fixed slots: every row sits ROW_H apart, whether there is 1 lead or 5. Rows slide down by one slot when a new lead lands. */}
-            <ul className="relative w-full" style={{ height: MAX_ROWS * ROW_H }}>
-              {rows.map((r, idx) => {
+          <div className="flex flex-1 items-start px-3 py-3 sm:px-4 sm:py-4">
+            {/* Rows are a fixed height. A new one grows open at the top and pushes the others down, so spacing is the same with 1 lead or 5. */}
+            <ul className="w-full overflow-hidden" style={{ height: MAX_ROWS * ROW_H }}>
+              {rows.map((r) => {
                 const src = sources[r.source];
                 const isSel = selected === r.id;
-                const overflow = idx >= MAX_ROWS;
                 return (
-                  <m.li
-                    key={r.id}
-                    initial={{ y: idx * ROW_H - ROW_H * 0.6, opacity: 0, scale: 0.96 }}
-                    animate={{ y: idx * ROW_H, opacity: overflow ? 0 : 1, scale: 1 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 26, opacity: { duration: 0.35 } }}
-                    className="absolute inset-x-0 top-0"
-                    style={{ height: ROW_H - 8, pointerEvents: overflow ? "none" : "auto" }}
-                  >
-                    <m.button
-                      type="button"
-                      onClick={() => pick(r)}
-                      aria-pressed={isSel}
-                      initial={r.fresh ? { backgroundColor: `${src.color}30` } : false}
-                      animate={{ backgroundColor: isSel ? "#f1f5f9" : "#ffffff00" }}
-                      transition={{ duration: 1.6 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={cn("group flex h-full w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left transition-colors duration-150 hover:bg-slate-50", isSel && "ring-1 ring-slate-200")}
-                    >
-                      <span className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand transition-transform duration-200 group-hover:scale-110">
-                        {r.name.slice(0, 2).toUpperCase()}
-                        <span className="absolute -right-1 -bottom-1 flex size-4.5 items-center justify-center rounded-full ring-2 ring-white" style={{ background: src.color }}>
-                          <src.icon className="size-2.5 text-white" />
+                  <li key={r.id} className={cn(r.fresh && "row-expand")}>
+                    <div className="min-h-0 overflow-hidden" style={{ paddingBottom: 8 }}>
+                      <m.button
+                        type="button"
+                        onClick={() => pick(r)}
+                        aria-pressed={isSel}
+                        initial={r.fresh ? { backgroundColor: `${src.color}30` } : false}
+                        animate={{ backgroundColor: isSel ? "#f1f5f9" : "#ffffff00" }}
+                        transition={{ duration: 1.6 }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{ height: ROW_H - 8 }}
+                        className={cn("group flex w-full cursor-pointer items-center gap-3 rounded-xl px-2 text-left transition-colors duration-150 hover:bg-slate-50 sm:px-3", isSel && "ring-1 ring-slate-200")}
+                      >
+                        <span className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand transition-transform duration-200 group-hover:scale-110">
+                          {r.name.slice(0, 2).toUpperCase()}
+                          <span className="absolute -right-1 -bottom-1 flex size-4.5 items-center justify-center rounded-full ring-2 ring-white" style={{ background: src.color }}>
+                            <src.icon className="size-2.5 text-white" />
+                          </span>
                         </span>
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-ink">{r.name}</p>
-                        <p className="truncate text-sm text-slate-600">{r.text}</p>
-                      </div>
-                      {r.replied ? (
-                        <m.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex shrink-0 items-center gap-1 rounded-full bg-[#d9f5e5] px-2 py-0.5 text-[10px] font-bold text-[#1f7a4a]"><Check className="size-3" />Replied</m.span>
-                      ) : null}
-                    </m.button>
-                  </m.li>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-ink">{r.name}</p>
+                          <p className="truncate text-sm text-slate-600">{r.text}</p>
+                        </div>
+                        {r.replied ? (
+                          <m.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex shrink-0 items-center gap-1 rounded-full bg-[#d9f5e5] px-2 py-0.5 text-[10px] font-bold text-[#1f7a4a]"><Check className="size-3" />Replied</m.span>
+                        ) : null}
+                      </m.button>
+                    </div>
+                  </li>
                 );
               })}
             </ul>
