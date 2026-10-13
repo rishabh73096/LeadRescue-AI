@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase SQL files (already applied in the Supabase project; kept on disk only)
+/supabase/
