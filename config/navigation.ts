@@ -1,4 +1,5 @@
 import type { Role } from "@/config/auth";
+import type { Feature } from "@/lib/plans";
 import { CalendarClock, ContactRound, House, KanbanSquare, MessageSquareText, Repeat, Settings, ShieldCheck, Tag, UploadCloud, Users, Wallet, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
@@ -9,6 +10,8 @@ export interface NavItem {
   gap?: boolean;
   /** Platform-admin only (the SaaS owner), not a workspace role. */
   admin?: boolean;
+  /** Needs this plan feature; the item shows a "Pro" tag when the plan lacks it. */
+  feature?: Feature;
   keywords?: string[];
 }
 
@@ -22,7 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Leads", roles: ALL, href: "/leads", icon: ContactRound, keywords: "leads enquiries customers contacts".split(" ") },
   { label: "Pipeline", roles: ALL, href: "/pipeline", icon: KanbanSquare, keywords: "pipeline stages new contacted quote won lost".split(" ") },
   { label: "Follow-ups", roles: ALL, href: "/follow-ups", icon: CalendarClock, keywords: "follow ups reminders overdue due".split(" ") },
-  { label: "AI Replies", roles: ALL, href: "/replies", icon: MessageSquareText, keywords: "ai replies drafts hindi english templates".split(" ") },
+  { label: "AI Replies", feature: "aiReplies", roles: ALL, href: "/replies", icon: MessageSquareText, keywords: "ai replies drafts hindi english templates".split(" ") },
   { label: "Import Leads", roles: MANAGERS, href: "/import", icon: UploadCloud, gap: true, keywords: "import csv upload".split(" ") },
   { label: "Settings", roles: MANAGERS, href: "/settings", icon: Settings, keywords: "settings workspace services pricing usage".split(" ") },
   { label: "Overview", roles: EVERYONE, admin: true, href: "/admin", icon: ShieldCheck, keywords: "admin platform overview revenue".split(" ") },

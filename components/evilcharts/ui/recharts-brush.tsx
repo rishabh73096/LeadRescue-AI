@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useMotionValue, useMotionValueEvent, useSpring, useTransform } from "motion/react";
+import { useMotionValue, useMotionValueEvent, useSpring, useTransform } from "motion/react";
+import * as m from "motion/react-m";
 import { ResponsiveContainer, AreaChart, Area, LineChart, Line, BarChart, Bar } from "recharts";
 import { ChartStyle, getColorsCount, type ChartConfig } from "@/components/evilcharts/ui/recharts-chart";
 import { useCallback, useEffect, type ComponentProps, type FC } from "react";
@@ -382,18 +383,18 @@ function EvilBrush({
       </div>
 
       {/* Dim overlay – left */}
-      <motion.div
+      <m.div
         className="bg-background/70 pointer-events-none absolute inset-y-0 left-0 rounded-l-md backdrop-blur-[2px]"
         style={{ width: leftOverlayWidth }}
       />
       {/* Dim overlay – right */}
-      <motion.div
+      <m.div
         className="bg-background/70 pointer-events-none absolute inset-y-0 right-0 rounded-r-md backdrop-blur-[2px]"
         style={{ width: rightOverlayWidth }}
       />
 
       {/* Selected region – draggable to pan */}
-      <motion.div
+      <m.div
         className="absolute inset-y-0 cursor-grab touch-none rounded-sm border active:cursor-grabbing"
         style={{ left: leftPosition, width: selectedWidth }}
         {...bind("middle")}
@@ -438,7 +439,7 @@ function BrushHandle({
   const isLeft = side === "left";
 
   return (
-    <motion.div className="absolute inset-y-0 z-10" style={{ left: position }}>
+    <m.div className="absolute inset-y-0 z-10" style={{ left: position }}>
       <div
         className={cn(
           "group absolute inset-y-0 flex w-3 cursor-ew-resize touch-none items-center justify-center after:absolute after:inset-y-0 after:-left-4 after:w-11 after:content-['']",
@@ -470,7 +471,7 @@ function BrushHandle({
           {label}
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }
 

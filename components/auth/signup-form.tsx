@@ -38,7 +38,7 @@ export function SignupForm({ next = "/dashboard" }: { next?: string }) {
 
   const submit = form.handleSubmit(async (v) => {
     const email = v.email.trim();
-    const { hasSession } = await authService.register({ name: `${v.firstName.trim()} ${v.lastName.trim()}`, email, password: v.password, phone: v.phone, role: v.role });
+    const { hasSession } = await authService.register({ name: `${v.firstName.trim()} ${v.lastName.trim()}`, email, password: v.password, phone: v.phone });
 
     if (hasSession) {
       await signIn();

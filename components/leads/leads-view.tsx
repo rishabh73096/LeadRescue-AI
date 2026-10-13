@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SearchInput } from "@/components/ui/search-input";
 import { LeadFormModal } from "@/components/leads/lead-form";
 import { useMounted } from "@/hooks/use-mounted";
+import { usePlan } from "@/lib/plan-store";
 import { useNow } from "@/hooks/use-now";
 import { relativeDay } from "@/lib/date";
 import { formatInr, isOpen, leadReason, sourceLabel, statusMeta, STATUSES } from "@/lib/leads";
@@ -29,6 +30,7 @@ export function LeadsView() {
   const mounted = useMounted();
   const now = useNow();
   const flashing = useFlashing();
+  const { can } = usePlan();
   const { leads, loaded } = useLeads();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
@@ -76,7 +78,7 @@ export function LeadsView() {
       id: "next",
       header: "Next step",
       cell: (l) => {
-        const reason = leadReason(l, now);
+        const reason = leadReason(l, now, can("reminders"));
         return (
           <div className="space-y-1">
             {reason ? <Badge tone="red" size="sm"><AlertTriangle className="size-3" />{reason}</Badge> : null}

@@ -66,7 +66,7 @@ export function Topbar({ data, menuOpen, onMenu, collapsed, onToggleCollapse, ar
 
   return (
     <>
-    <header className="sticky top-0 z-50 flex h-[66px] items-center gap-3 bg-[#0b1026] px-4 text-white sm:gap-5 sm:px-6">
+    <header className="sticky top-0 z-50 flex h-[66px] items-center gap-3 bg-[#0b1026] text-white sm:gap-5" style={{ paddingInline: "max(1rem, calc((100% - 1520px) / 2 + 1rem))" }}>
       <button type="button" onClick={onMenu} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} aria-controls="dashboard-sidebar" className="-ml-1 flex size-9 items-center justify-center rounded-lg hover:bg-white/10 lg:hidden">
         {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
       </button>

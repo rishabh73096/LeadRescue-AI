@@ -15,6 +15,8 @@ import { useNow } from "@/hooks/use-now";
 import { addDays, startOfDay } from "@/lib/date";
 import { formatInr, isOpen, leadReason } from "@/lib/leads";
 import { dueNextDays, perDay, sourceCounts, stageCounts, stageValues, sum, winRate } from "@/lib/stats";
+import { usePlan } from "@/lib/plan-store";
+import { UpgradeCard } from "@/components/billing/feature-gate";
 import { useActivities, useLeads } from "@/services/leads";
 import type { Lead } from "@/types/lead";
 
@@ -24,6 +26,7 @@ export function Overview() {
   const mounted = useMounted();
   const now = useNow();
   const user = useAuth();
+  const { can } = usePlan();
   const { leads } = useLeads();
   const activities = useActivities();
 
@@ -33,7 +36,7 @@ export function Overview() {
   const tomorrow = addDays(today, 1).getTime();
   const open = leads.filter(isOpen);
   const due = (l: Lead) => (l.nextFollowUpAt ? new Date(l.nextFollowUpAt).getTime() : null);
-  const attention = open.map((l) => ({ lead: l, reason: leadReason(l, now) })).filter((x): x is { lead: Lead; reason: string } => x.reason !== null);
+  const attention = open.map((l) => ({ lead: l, reason: leadReason(l, now, can("reminders")) })).filter((x): x is { lead: Lead; reason: string } => x.reason !== null);
   const dueToday = open.filter((l) => { const d = due(l); return d !== null && d >= today && d < tomorrow; });
   const openValue = sum(open.map((l) => l.value));
   const wonValue = sum(leads.filter((l) => l.status === "won").map((l) => l.value));
@@ -80,7 +83,8 @@ export function Overview() {
       </Grid>
 
       <Grid cols={2}>
-        <Panel className="p-5 sm:p-6">
+        {can("overdueDashboard") ? (
+          <Panel className="p-5 sm:p-6">
           <PanelHeader title="Needs a reply" description="Sorted by what slipped first." icon={AlertTriangle} aside={<Link href="/follow-ups" className="text-brand inline-flex items-center gap-1 text-sm font-semibold hover:underline">All follow-ups<ArrowRight className="size-3.5" /></Link>} />
           {attention.length === 0 ? (
             <p className="mt-6 rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-400">You&apos;re all caught up.</p>
@@ -100,6 +104,9 @@ export function Overview() {
             </ul>
           )}
         </Panel>
+        ) : (
+          <UpgradeCard feature="overdueDashboard" compact />
+        )}
 
         <Panel className="p-5 sm:p-6">
           <PanelHeader title="Recent activity" icon={CalendarClock} />

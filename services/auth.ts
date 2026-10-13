@@ -19,7 +19,8 @@ export function normalizeUser(u: SupabaseUser): User {
     fullName: String(m.name ?? m.full_name ?? ""),
     email: u.email ?? "",
     phone: String(m.phone ?? u.phone ?? ""),
-    role: String(m.role ?? "user"),
+    // Never trust user_metadata for permissions (users can edit it). The real role comes from the database: see useRole().
+    role: "owner",
     createdAt: u.created_at,
     businessName: String(m.businessName ?? ""),
     website: String(m.website ?? ""),
@@ -45,11 +46,11 @@ function fail(error: { code?: string; message: string }): never {
   throw new Error((error.code && AUTH_MESSAGES[error.code]) || error.message || "Something went wrong. Please try again.");
 }
 
-export async function register(input: { name: string; email: string; password: string; phone?: string; role?: string }): Promise<{ hasSession: boolean }> {
+export async function register(input: { name: string; email: string; password: string; phone?: string }): Promise<{ hasSession: boolean }> {
   const { data, error } = await createClient().auth.signUp({
     email: input.email,
     password: input.password,
-    options: { data: { name: input.name, phone: input.phone, role: input.role } },
+    options: { data: { name: input.name, phone: input.phone } },
   });
   if (error) fail(error);
   // Supabase hides duplicate emails when confirmation is on: identities comes back empty.

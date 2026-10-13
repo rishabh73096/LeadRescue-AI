@@ -39,7 +39,8 @@ import { ChartLegend, ChartLegendContent, type ChartLegendVariant } from "@/comp
 import { Brush, EvilBrush, useEvilBrush, type BrushProps } from "@/components/evilcharts/ui/recharts-brush";
 import { ChartBackground, type BackgroundVariant } from "@/components/evilcharts/ui/recharts-background";
 import { RectRadius } from "recharts/types/shape/Rectangle";
-import { motion, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
 
 // Constants
 const DEFAULT_BAR_RADIUS = 2;
@@ -678,14 +679,14 @@ const CustomBar = (props: CustomBarProps) => {
       <Rectangle {...props} fill="transparent" />
       {/* The painted bar grows in from its baseline; the hit rect above stays put */}
       {grow ? (
-        <motion.g
+        <m.g
           initial={grow.initial}
           animate={grow.animate}
           transition={grow.transition}
           style={grow.style}
         >
           {visibleBar}
-        </motion.g>
+        </m.g>
       ) : (
         visibleBar
       )}
@@ -1253,7 +1254,7 @@ const LoadingBarPattern = ({
         x="0"
         y="0"
       >
-        <motion.rect
+        <m.rect
           y="0"
           width="1"
           height="1"

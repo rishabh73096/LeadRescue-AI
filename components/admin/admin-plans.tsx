@@ -1,12 +1,13 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { BarsH } from "@/components/charts/charts";
 import { ChartCard, Grid } from "@/components/charts/chart-card";
 import { useAdminData } from "@/services/admin";
 import { PageHeader } from "@/components/ui/page-header";
 import { Panel } from "@/components/ui/panel";
+import { Check, Minus } from "lucide-react";
 import { LANDING } from "@/config/landing";
+import { ALL_FEATURES, FEATURE_LABELS, planHas } from "@/lib/plans";
 import { UPI_PAYEE, UPI_VPA } from "@/lib/upi";
 
 export function PlansView() {
@@ -26,6 +27,20 @@ export function PlansView() {
           </Panel>
         ))}
       </Grid>
+      <Panel className="overflow-hidden">
+        <div className="p-5 sm:p-6"><p className="text-base font-bold text-ink">What each plan includes</p><p className="mt-0.5 text-sm text-slate-500">Enforced in the app and in the database. Change in lib/plans.ts and supabase/migrations/0006.</p></div>
+        <table className="w-full text-left text-sm">
+          <thead><tr className="border-y border-slate-100 bg-slate-50/60 text-[10px] font-semibold tracking-wider text-slate-400 uppercase"><th className="px-5 py-3">Feature</th><th className="px-5 py-3">Starter</th><th className="px-5 py-3">Pro</th></tr></thead>
+          <tbody className="divide-y divide-slate-100">
+            {ALL_FEATURES.map((f) => (
+              <tr key={f}>
+                <td className="px-5 py-3 text-slate-700">{FEATURE_LABELS[f]}</td>
+                {(["Starter", "Pro"] as const).map((p) => <td key={p} className="px-5 py-3">{planHas(p, f) ? <Check className="text-brand size-4" /> : <Minus className="size-4 text-slate-300" />}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Panel>
       <ChartCard title="Customers per plan" description="Active subscriptions" table={{ head: ["Plan", "Customers"], rows: mix.map((m) => [m.label, m.value]) }}>
         <BarsH data={mix} name="Customers" height={120} />
       </ChartCard>

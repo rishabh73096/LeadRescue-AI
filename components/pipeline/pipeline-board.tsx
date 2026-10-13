@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
 import { useMounted } from "@/hooks/use-mounted";
+import { usePlan } from "@/lib/plan-store";
 import { useNow } from "@/hooks/use-now";
 import { formatInr, isOpen, leadReason, STATUSES, statusMeta } from "@/lib/leads";
 import { stageValues, sum, winRate } from "@/lib/stats";
@@ -23,6 +24,7 @@ export function PipelineBoard() {
   const mounted = useMounted();
   const now = useNow();
   const flashing = useFlashing();
+  const { can } = usePlan();
   const { leads } = useLeads();
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<LeadStatus | null>(null);
@@ -67,7 +69,7 @@ export function PipelineBoard() {
               </header>
               <div className="flex min-h-24 flex-col gap-2.5">
                 {items.length === 0 ? <p className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">Drop leads here</p> : null}
-                {items.map((l) => <Card key={l.id} lead={l} reason={leadReason(l, now)} dragging={dragId === l.id} flashing={flashing.has(l.id)} onDragStart={() => setDragId(l.id)} onDragEnd={() => { setDragId(null); setOver(null); }} onMove={(st) => move(l.id, st)} />)}
+                {items.map((l) => <Card key={l.id} lead={l} reason={leadReason(l, now, can("reminders"))} dragging={dragId === l.id} flashing={flashing.has(l.id)} onDragStart={() => setDragId(l.id)} onDragEnd={() => { setDragId(null); setOver(null); }} onMove={(st) => move(l.id, st)} />)}
               </div>
             </section>
           );

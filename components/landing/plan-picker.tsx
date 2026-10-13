@@ -11,13 +11,13 @@ import { LANDING } from "@/config/landing";
 import { useAuthState } from "@/context/AuthContext";
 import { useSubscription } from "@/lib/subscription";
 import { notify } from "@/lib/toast";
-import { UPI_VPA, isValidUtr, priceToInr, upiLink } from "@/lib/upi";
+import { TEST_MODE, UPI_VPA, isValidUtr, priceToInr, upiLink } from "@/lib/upi";
 import { cn } from "@/lib/utils";
 
 export function PlanPicker({ preselect }: { preselect?: string }) {
   const router = useRouter();
   const { user } = useAuthState();
-  const { plan, pending, ready, refresh, submitPayment } = useSubscription();
+  const { plan, pending, ready, refresh, submitPayment, activateTest } = useSubscription();
   const plans = LANDING.pricing.plans;
   const [selected, setSelected] = useState(plans.find((p) => p.name === preselect)?.name ?? plans.find((p) => p.featured)?.name ?? plans[0].name);
   const [paying, setPaying] = useState(false);
@@ -27,8 +27,9 @@ export function PlanPicker({ preselect }: { preselect?: string }) {
   const amount = priceToInr(chosen.price);
 
   useEffect(() => {
-    if (ready && plan) router.replace("/dashboard");
-  }, [ready, plan, router]);
+    // someone who already has a plan goes to the dashboard, unless they came here to switch to a different one
+    if (ready && plan && (!preselect || preselect === plan)) router.replace("/dashboard");
+  }, [ready, plan, preselect, router]);
 
   const submit = async () => {
     const ref = utr.trim();
@@ -37,6 +38,19 @@ export function PlanPicker({ preselect }: { preselect?: string }) {
     try {
       await submitPayment({ plan: chosen.name, amount, utr: ref });
       notify.success("Payment submitted. We'll activate your plan once it's verified.");
+    } catch (error) {
+      notify.error(error);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const testActivate = async () => {
+    setBusy(true);
+    try {
+      await activateTest(chosen.name);
+      notify.success(`${chosen.name} plan activated (test mode)`);
+      router.replace("/dashboard");
     } catch (error) {
       notify.error(error);
     } finally {
@@ -69,6 +83,12 @@ export function PlanPicker({ preselect }: { preselect?: string }) {
     <Shell>
       <h1 className="font-inter mt-10 text-4xl font-extrabold tracking-[-0.04em] text-ink sm:text-5xl">Choose your plan{user?.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}.</h1>
       <p className="mt-3 text-slate-500">Pick a plan and pay with any UPI app. Prices are per month, in INR.</p>
+      {TEST_MODE ? (
+        <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl bg-[#fdecc8] px-4 py-3 text-sm text-[#8a5a00]">
+          <span className="rounded-full bg-[#8a5a00] px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">Test mode</span>
+          No real money is taken here. Use the button below to activate a plan instantly.
+        </div>
+      ) : null}
 
       <div className={cn("mt-8 grid gap-3", plans.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2")}>
         {plans.map((p) => (
@@ -96,6 +116,11 @@ export function PlanPicker({ preselect }: { preselect?: string }) {
           <Button type="button" variant="brand" size="xl" className="rounded-full px-8" onClick={() => setPaying(true)} disabled={!ready}>
             Pay {chosen.price} with UPI
           </Button>
+          {TEST_MODE ? (
+            <Button type="button" variant="neutral" size="xl" className="ml-3 rounded-full px-8" loading={busy} onClick={testActivate} disabled={!ready}>
+              Activate {chosen.name} (test, no payment)
+            </Button>
+          ) : null}
         </div>
       ) : !UPI_VPA ? (
         <p className="mt-8 text-sm text-red-600">UPI is not configured. Set NEXT_PUBLIC_UPI_VPA in .env.local.</p>

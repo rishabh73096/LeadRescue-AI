@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock, Mail } from "lucide-react";
 import * as authService from "@/services/auth";
+import { isPlatformAdmin } from "@/services/admin";
 import { loginSchema } from "@/lib/schemas";
 import { notify } from "@/lib/toast";
 import { useAuthState } from "@/context/AuthContext";
@@ -33,7 +34,8 @@ export function LoginForm({ next = "/dashboard" }: { next?: string }) {
     const user = await authService.login({ email, password });
     await signIn(user);
     notify.success("Welcome back!");
-    router.replace(next);
+    // admins manage the platform from /admin and never need a plan
+    router.replace(next === "/dashboard" && (await isPlatformAdmin(user._id)) ? "/admin" : next);
   }
 
   const submit = form.handleSubmit(({ email, password }) => enter(email.trim(), password));

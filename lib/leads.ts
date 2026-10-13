@@ -27,12 +27,13 @@ const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR",
 export const formatInr = (v: number) => inr.format(v);
 
 // Why a lead needs attention right now; null when it doesn't.
-export function leadReason(l: Lead, now = Date.now()): string | null {
+export function leadReason(l: Lead, now = Date.now(), autoReminders = true): string | null {
   if (!isOpen(l)) return null;
   if (l.nextFollowUpAt && new Date(l.nextFollowUpAt).getTime() < now) {
     const days = Math.max(1, Math.floor((now - new Date(l.nextFollowUpAt).getTime()) / DAY_MS));
     return `Follow-up overdue by ${days} day${days > 1 ? "s" : ""}`;
   }
+  if (!autoReminders) return null; // 24h / 48h reminders are included in Pro
   const idle = now - new Date(l.updatedAt).getTime();
   if (l.status === "new" && idle > DAY_MS) return "No reply in 24h";
   if (l.status === "quote_sent" && idle > 2 * DAY_MS) return "Quote sent 48h ago, no answer";

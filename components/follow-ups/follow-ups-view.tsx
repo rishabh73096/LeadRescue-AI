@@ -14,6 +14,7 @@ import { useNow } from "@/hooks/use-now";
 import { addDays, relativeDay, startOfDay } from "@/lib/date";
 import { isOpen, leadReason, statusMeta } from "@/lib/leads";
 import { dueNextDays } from "@/lib/stats";
+import { usePlan } from "@/lib/plan-store";
 import { notify } from "@/lib/toast";
 import { completeFollowUp, useLeads } from "@/services/leads";
 import type { Lead } from "@/types/lead";
@@ -69,7 +70,8 @@ export function FollowUpsView() {
 }
 
 function Row({ lead, now }: { lead: Lead; now: number }) {
-  const reason = leadReason(lead, now);
+  const { can } = usePlan();
+  const reason = leadReason(lead, now, can("reminders"));
   const done = (days: number) => {
     completeFollowUp(lead.id, days);
     notify.success(`${lead.name}: next follow-up in ${days} day${days > 1 ? "s" : ""}`);

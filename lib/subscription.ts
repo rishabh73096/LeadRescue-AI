@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuthState } from "@/context/AuthContext";
+import { refreshPlan } from "@/lib/plan-store";
 import { registerLocalKey } from "@/lib/local-store";
 import { createClient } from "@/utils/supabase/client";
 
@@ -36,6 +37,7 @@ export function useSubscription() {
       const active = sub.data && sub.data.status === "active" && new Date(sub.data.current_period_end) > new Date();
       setPlan(active ? sub.data!.plan : null);
       setPending(pay.data ?? null);
+      refreshPlan(id);
       try {
         registerLocalKey(snapKey);
         window.localStorage.setItem(snapKey, JSON.stringify({ plan: active ? sub.data!.plan : null, end: sub.data?.current_period_end ?? null }));
@@ -70,5 +72,15 @@ export function useSubscription() {
     [load],
   );
 
-  return { plan, pending, ready, refresh: load, submitPayment };
+  // Testing mode only: the database refuses this unless test payments are switched on there.
+  const activateTest = useCallback(
+    async (planName: string) => {
+      const { error } = await createClient().rpc("activate_test_plan", { p_plan: planName });
+      if (error) throw new Error("Test activation is off in the database. Run the 0004 SQL, or pay by UPI.");
+      await load();
+    },
+    [load],
+  );
+
+  return { plan, pending, ready, refresh: load, submitPayment, activateTest };
 }

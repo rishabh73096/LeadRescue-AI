@@ -74,6 +74,26 @@ export async function extendSubscription(userId: string, currentEnd: string, day
   if (error) throw new Error("Couldn't update the subscription.");
 }
 
+// Gives a customer a plan (or switches it) for 30 days from now, or removes it with null.
+export async function setCustomerPlan(userId: string, plan: "Starter" | "Pro" | null, hasRow: boolean) {
+  const supabase = createClient();
+  if (plan === null) {
+    const { error } = await supabase.from("subscriptions").update({ status: "expired", updated_at: new Date().toISOString() }).eq("user_id", userId);
+    if (error) throw new Error("Couldn't remove the plan.");
+    return;
+  }
+  const end = new Date(Date.now() + 30 * DAY_MS).toISOString();
+  const { error } = hasRow
+    ? await supabase.from("subscriptions").update({ plan, status: "active", updated_at: new Date().toISOString() }).eq("user_id", userId)
+    : await supabase.from("subscriptions").insert({ user_id: userId, plan, status: "active", current_period_end: end });
+  if (error) throw new Error("Couldn't change the plan. Run the 0006 SQL and make sure you are a platform admin.");
+}
+
+export async function setCustomerRole(userId: string, role: "owner" | "admin" | "staff") {
+  const { error } = await createClient().from("profiles").update({ role }).eq("id", userId);
+  if (error) throw new Error("Couldn't change the role. Run the 0006 SQL and make sure you are a platform admin.");
+}
+
 export async function expireSubscription(userId: string) {
   const { error } = await createClient().from("subscriptions").update({ status: "expired", updated_at: new Date().toISOString() }).eq("user_id", userId);
   if (error) throw new Error("Couldn't update the subscription.");
@@ -84,21 +104,25 @@ export async function isPlatformAdmin(userId: string): Promise<boolean> {
   return Boolean(data);
 }
 
-export function usePlatformAdmin(userId?: string): boolean | null {
-  const [admin, setAdmin] = useState<boolean | null>(null);
+// Real lookup in `platform_admins` (ignores the dev switch). null = still checking.
+export function useAdminLookup(userId?: string): boolean | null {
+  const [state, setState] = useState<{ id: string; admin: boolean } | null>(null);
   useEffect(() => {
-    if (!GUARDS_ENABLED || !userId) return;
+    if (!userId) return;
     let cancelled = false;
-    createClient()
-      .from("platform_admins")
-      .select("user_id")
-      .eq("user_id", userId)
-      .maybeSingle()
-      .then(({ data }) => !cancelled && setAdmin(Boolean(data)));
+    isPlatformAdmin(userId)
+      .catch(() => false)
+      .then((admin) => !cancelled && setState({ id: userId, admin }));
     return () => {
       cancelled = true;
     };
   }, [userId]);
+  if (!userId) return false;
+  return state && state.id === userId ? state.admin : null;
+}
+
+export function usePlatformAdmin(userId?: string): boolean | null {
+  const lookup = useAdminLookup(GUARDS_ENABLED ? userId : undefined);
   // Guards off (UI development): show admin pages to everyone.
-  return GUARDS_ENABLED ? (userId ? admin : false) : true;
+  return GUARDS_ENABLED ? lookup : true;
 }

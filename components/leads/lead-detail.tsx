@@ -14,6 +14,7 @@ import { TextAreaField } from "@/components/ui/form-field";
 import { LeadFormModal } from "@/components/leads/lead-form";
 import { ActivityTimeline } from "@/components/leads/activity-timeline";
 import { useMounted } from "@/hooks/use-mounted";
+import { usePlan } from "@/lib/plan-store";
 import { useNow } from "@/hooks/use-now";
 import { cn } from "@/lib/utils";
 import { relativeDay } from "@/lib/date";
@@ -28,6 +29,7 @@ export function LeadDetail({ id }: { id: string }) {
   const router = useRouter();
   const mounted = useMounted();
   const now = useNow();
+  const { can } = usePlan();
   const { lead, loaded } = useLead(id);
   const activities = useActivities(id);
   const [note, setNote] = useState("");
@@ -43,7 +45,7 @@ export function LeadDetail({ id }: { id: string }) {
     );
   }
 
-  const reason = leadReason(lead, now);
+  const reason = leadReason(lead, now, can("reminders"));
   const digits = lead.phone.replace(/\D/g, "");
 
   const saveNote = () => {

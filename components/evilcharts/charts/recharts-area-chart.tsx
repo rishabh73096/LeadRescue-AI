@@ -48,7 +48,8 @@ import {
   type ChartLegendVariant,
 } from "@/components/evilcharts/ui/recharts-legend";
 import { ChartDot, type DotVariant } from "@/components/evilcharts/ui/recharts-dot";
-import { motion, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
 
 // Constants
 const STROKE_WIDTH = 0.8; // default series stroke — <Area strokeWidth> overrides it
@@ -681,7 +682,7 @@ const RevealMask = ({ id, type }: { id: string; type: RevealAnimationType }) => 
       {type === "edges-in" ? (
         <>
           {/* left half wipes inward from the left edge toward the centre */}
-          <motion.rect
+          <m.rect
             {...reveal}
             x="0"
             y="0"
@@ -691,7 +692,7 @@ const RevealMask = ({ id, type }: { id: string; type: RevealAnimationType }) => 
             style={{ originX: 0 }}
           />
           {/* right half wipes inward from the right edge toward the centre */}
-          <motion.rect
+          <m.rect
             {...reveal}
             x="50%"
             y="0"
@@ -702,7 +703,7 @@ const RevealMask = ({ id, type }: { id: string; type: RevealAnimationType }) => 
           />
         </>
       ) : (
-        <motion.rect
+        <m.rect
           {...reveal}
           x="0"
           y="0"
@@ -1081,7 +1082,7 @@ const LoadingPattern = ({
         x="0"
         y="0"
       >
-        <motion.rect
+        <m.rect
           y="0"
           width="1"
           height="1"

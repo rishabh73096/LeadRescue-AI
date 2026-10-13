@@ -9,6 +9,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const PROTECTED = ["/dashboard", "/choose-plan", "/leads", "/pipeline", "/follow-ups", "/replies", "/import", "/settings", "/admin"];
 const isAdminLogin = (path: string) => path === "/admin/login";
 const GUEST_ONLY = ["/login", "/signup"];
+const WORKSPACE = ["/dashboard", "/leads", "/pipeline", "/follow-ups", "/replies", "/import", "/settings"];
 
 const matches = (path: string, list: string[]) => list.some((p) => path === p || path.startsWith(`${p}/`));
 
@@ -49,6 +50,28 @@ export async function updateSession(request: NextRequest) {
     return redirect(pathname.startsWith("/admin") ? `/admin/login?next=${encodeURIComponent(target)}` : loginUrl(target));
   }
   if (user && matches(pathname, GUEST_ONLY)) return redirect(safeNext(request.nextUrl.searchParams.get("next")));
+
+  // Extra server-side checks (the browser cannot skip these). Link prefetches are skipped; the real visit is checked.
+  const prefetch = request.headers.has("next-router-prefetch") || request.headers.get("purpose") === "prefetch";
+  if (user && !prefetch) {
+    // 1) Admin console: the signed-in account must be listed in platform_admins.
+    if (pathname.startsWith("/admin") && !isAdminLogin(pathname)) {
+      const { data } = await supabase.from("platform_admins").select("user_id").eq("user_id", user.id).maybeSingle();
+      if (!data) return redirect("/admin/login?error=not-admin");
+    }
+
+    // 2) Customer workspace: needs an active, unexpired plan (platform admins are exempt).
+    if (matches(pathname, WORKSPACE)) {
+      const [admin, sub] = await Promise.all([
+        supabase.from("platform_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
+        supabase.from("subscriptions").select("status,current_period_end").eq("user_id", user.id).maybeSingle(),
+      ]);
+      const paid = sub.data?.status === "active" && new Date(sub.data.current_period_end).getTime() > Date.now();
+      // if the database cannot be reached, let the page open (the page itself re-checks and RLS still protects data)
+      const unreachable = Boolean(admin.error || sub.error);
+      if (!admin.data && !paid && !unreachable) return redirect("/choose-plan");
+    }
+  }
 
   return response;
 }

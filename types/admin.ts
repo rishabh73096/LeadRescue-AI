@@ -3,6 +3,7 @@ export interface Profile {
   email: string | null;
   name: string | null;
   phone: string | null;
+  role?: "owner" | "admin" | "staff";
   created_at: string;
 }
 

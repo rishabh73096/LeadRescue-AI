@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { PageSkeleton } from "@/components/dashboard/page-skeleton";
 import { AccessDenied } from "@/components/dashboard/access-denied";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
@@ -19,7 +20,7 @@ export function DashboardShell({ children, area = "workspace" }: { children: Rea
   const [open, setOpen] = useState(false);
   const collapsed = collapsedStore.use();
   const pathname = usePathname();
-  const { role } = useRole();
+  const { role, ready } = useRole();
   const allowed = area === "admin" ? true : navItemFor(pathname)?.roles.includes(role) ?? true;
   const close = () => setOpen(false);
 
@@ -29,7 +30,7 @@ export function DashboardShell({ children, area = "workspace" }: { children: Rea
   return (
     <div className={"min-h-svh bg-white"}>
       <Topbar data={dashboardData} menuOpen={open} onMenu={() => setOpen((v) => !v)} area={area} collapsed={collapsed} onToggleCollapse={() => collapsedStore.set(!collapsed)} />
-      <div className={collapsed ? "lg:grid lg:grid-cols-1" : "lg:grid lg:grid-cols-[290px_minmax(0,1fr)]"}>
+      <div className={`mx-auto w-full max-w-[1520px] ${collapsed ? "lg:grid lg:grid-cols-1" : "lg:grid lg:grid-cols-[290px_minmax(0,1fr)]"}`}>
         <div onClick={close} aria-hidden className={`fixed inset-0 top-[66px] z-30 bg-slate-900/40 transition-opacity lg:hidden ${open ? "opacity-100" : "pointer-events-none opacity-0"}`} />
         <aside
           id="dashboard-sidebar"
@@ -37,7 +38,7 @@ export function DashboardShell({ children, area = "workspace" }: { children: Rea
         >
           <Sidebar data={dashboardData} area={area} onNavigate={close} />
         </aside>
-        <main className="min-w-0 px-4 py-5 sm:px-6 lg:px-7 lg:py-7">{allowed ? children : <AccessDenied />}</main>
+        <main className="min-w-0 px-4 py-5 sm:px-6 lg:px-7 lg:py-7">{!ready ? <PageSkeleton /> : allowed ? children : <AccessDenied />}</main>
       </div>
     </div>
   );

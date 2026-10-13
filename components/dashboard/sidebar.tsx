@@ -6,6 +6,7 @@ import { ArrowRight, Headset } from "lucide-react";
 import { visibleNav, type NavArea } from "@/config/navigation";
 import { useRole } from "@/hooks/use-role";
 import { useAuthState } from "@/context/AuthContext";
+import { usePlan } from "@/lib/plan-store";
 import { ROLE_LABELS } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import type { DashboardData } from "@/types/dashboard";
@@ -16,6 +17,7 @@ export function Sidebar({ data, onNavigate, area = "workspace" }: { data: Dashbo
   const { role } = useRole();
   const { user } = useAuthState();
   const isAdminArea = area === "admin";
+  const { can } = usePlan();
   const displayName = isAdminArea ? user?.fullName || "Platform admin" : user?.businessName || user?.fullName || data.account.name;
 
   return (
@@ -29,7 +31,8 @@ export function Sidebar({ data, onNavigate, area = "workspace" }: { data: Dashbo
       </div>
 
       <nav aria-label={isAdminArea ? "Admin console" : "Dashboard"} className="flex flex-col">
-        {visibleNav(role, area).map(({ label, href, icon: Icon, gap }, idx) => {
+        {visibleNav(role, area).map(({ label, href, icon: Icon, gap, feature }, idx) => {
+          const locked = feature ? !can(feature) : false;
           const active = href === "/admin" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
@@ -46,6 +49,7 @@ export function Sidebar({ data, onNavigate, area = "workspace" }: { data: Dashbo
             >
               <Icon className="size-[18px] shrink-0 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-125" />
               <span className="flex-1 truncate">{label}</span>
+              {locked ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">Pro</span> : null}
             </Link>
           );
         })}

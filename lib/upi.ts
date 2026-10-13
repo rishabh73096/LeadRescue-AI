@@ -1,4 +1,7 @@
-export const UPI_VPA = process.env.NEXT_PUBLIC_UPI_VPA || "";
+// Testing mode: no real money. Shows a dummy QR and lets you activate a plan with one click.
+// The database must also allow it (see supabase/migrations/0004_test_payments.sql), so it cannot be abused in production.
+export const TEST_MODE = process.env.NEXT_PUBLIC_PAYMENT_TEST_MODE === "true";
+export const UPI_VPA = process.env.NEXT_PUBLIC_UPI_VPA || (TEST_MODE ? "test@upi" : "");
 export const UPI_PAYEE = process.env.NEXT_PUBLIC_UPI_PAYEE_NAME || "LeadRescue AI";
 
 export const priceToInr = (price: string) => Number(price.replace(/[^\d]/g, "")) || 0;

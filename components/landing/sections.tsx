@@ -3,6 +3,8 @@ import { ArrowDown, ArrowRight, Check, ChevronDown, FileSpreadsheet, Globe, Mail
 import { BRAND } from "@/config/site";
 import { Logo } from "@/components/ui/logo";
 import { LogoMark } from "@/components/ui/logo-mark";
+import { DesktopNav, MobileNav } from "@/components/landing/nav-menu";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { LazyFlowDemo } from "@/components/landing/lazy-flow-demo";
 import { CountStat, HeroConverge, LanguageSwap, MethodFeed, SendDemo, StageTracker, StatusCycle, TeamAvatars, Twinkle } from "@/components/landing/bento-visuals";
 import { HeroTile, HoverLift, PopIcon, PressLink, WaveBars } from "@/components/landing/interactive";
@@ -15,19 +17,16 @@ const btnDark = "inline-flex h-12 items-center justify-center gap-2 rounded-full
 const btnLight = "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#f1f1f2] px-7 text-[15px] font-semibold text-ink transition-colors hover:bg-[#e8e8ea]";
 
 export function LandingNav() {
-  const links = [["Features", "/#features"], ["How it works", "/#how"], ["Pricing", "/#pricing"], ["FAQ", "/#faq"]];
+  const links = [{ label: "Features", href: "/#features" }, { label: "How it works", href: "/#how" }, { label: "Pricing", href: "/#pricing" }, { label: "FAQ", href: "/#faq" }];
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-8 px-5 sm:px-8">
-        <Logo />
-        <nav className="hidden gap-6 md:flex">
-          {links.map(([label, href]) => (
-            <Link key={href} href={href} className="relative text-sm text-slate-600 transition-colors after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-200 hover:text-ink hover:after:scale-x-100">{label}</Link>
-          ))}
-        </nav>
+      <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-4 px-5 sm:gap-8 sm:px-8">
+        <Logo className="shrink-0 whitespace-nowrap" />
+        <DesktopNav links={links} />
         <div className="ml-auto flex items-center gap-2">
           <PressLink href="/login" hover={1.05} className="hidden h-10 items-center rounded-full px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-ink sm:inline-flex">Sign in</PressLink>
-          <PressLink href="/signup" className="inline-flex h-10 items-center rounded-full bg-[#f1f1f2] px-5 text-sm font-semibold text-ink hover:bg-[#e8e8ea]">Get started</PressLink>
+          <PressLink href="/signup" className="hidden h-10 items-center rounded-full bg-[#f1f1f2] px-5 text-sm font-semibold whitespace-nowrap text-ink hover:bg-[#e8e8ea] min-[420px]:inline-flex">Get started</PressLink>
+          <MobileNav links={links} />
         </div>
       </div>
     </header>
@@ -164,17 +163,24 @@ export function Audience({ c }: { c: LandingContent }) {
         <p className="text-xs text-slate-400">{a.eyebrow}</p>
         <h2 className="font-inter mt-3 text-4xl font-extrabold tracking-[-0.045em] text-ink sm:text-5xl">{a.title}<br /><span className="text-slate-400">{a.titleMuted}</span></h2>
       </Reveal>
-      <div className="grid gap-3 md:grid-cols-3">
-        {a.cards.map((card, i) => (
-          <HoverLift key={card.who} delay={i * 0.08}>
+      {/* Swipeable on phones (Kobra Carousel); on md+ all three cards fit, so it behaves like a grid. */}
+      <Carousel opts={{ align: "start", containScroll: "trimSnaps" }} className="relative">
+        <CarouselContent className="-ml-3">
+          {a.cards.map((card, i) => (
+            <CarouselItem key={card.who} className="basis-[86%] pl-3 sm:basis-1/2 md:basis-1/3">
+              <HoverLift delay={i * 0.08} className="h-full">
           <figure className="group flex h-full flex-col gap-5 rounded-3xl bg-[#f4f4f5] p-6 transition-shadow duration-300 hover:shadow-[0_18px_40px_-20px_rgba(15,17,41,0.25)]">
             <span className="flex size-11 items-center justify-center rounded-xl bg-brand text-white transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110"><card.icon className="size-5" /></span>
             <blockquote className="text-[15px] leading-7 text-ink">{card.scenario}</blockquote>
             <figcaption className="mt-auto text-sm"><b className="text-ink">{card.who}</b><span className="block text-xs text-slate-500">{card.role}</span></figcaption>
           </figure>
           </HoverLift>
-        ))}
-      </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="start-2 hidden sm:flex md:hidden" />
+        <CarouselNext className="end-2 hidden sm:flex md:hidden" />
+      </Carousel>
       <p className="mt-4 text-center text-xs text-slate-400">Illustrative scenarios, not customer reviews.</p>
     </section>
   );
