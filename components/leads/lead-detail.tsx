@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { relativeDay } from "@/lib/date";
 import { formatInr, leadReason, sourceLabel, STATUSES } from "@/lib/leads";
 import { notify } from "@/lib/toast";
-import { addNote, deleteLead, inDays, setFollowUp, setLeadStatus, useActivities, useLead } from "@/services/leads";
+import { addNote, deleteLead, restoreLead, inDays, setFollowUp, setLeadStatus, useActivities, useLead } from "@/services/leads";
 import type { LeadStatus } from "@/types/lead";
 
 const SNOOZE = [{ label: "Tomorrow", days: 1 }, { label: "In 3 days", days: 3 }, { label: "In a week", days: 7 }];
@@ -123,7 +123,7 @@ export function LeadDetail({ id }: { id: string }) {
             </div>
           </Panel>
 
-          <Button type="button" variant="destructive" size="lg" className="h-10 w-full rounded-full" onClick={() => { if (window.confirm(`Delete ${lead.name}?`)) { deleteLead(lead.id); notify.success("Lead deleted"); router.replace("/leads"); } }}><Trash2 />Delete lead</Button>
+          <Button type="button" variant="destructive" size="lg" className="h-10 w-full rounded-full" onClick={() => { const gone = lead; deleteLead(lead.id); notify.action("Lead deleted", { label: "Undo", run: () => { restoreLead(gone); notify.success("Lead restored"); router.replace(`/leads/${gone.id}`); } }, gone.name); router.replace("/leads"); }}><Trash2 />Delete lead</Button>
         </div>
       </div>
 

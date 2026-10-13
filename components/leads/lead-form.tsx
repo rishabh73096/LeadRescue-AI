@@ -57,7 +57,7 @@ function LeadFormBody({ lead, onClose }: { lead?: Lead; onClose: () => void }) {
     };
     if (lead) updateLead(lead.id, input);
     else addLead({ ...input, nextFollowUpAt: input.nextFollowUpAt ?? inDays(1) });
-    notify.success(lead ? "Lead updated" : "Lead added");
+    notify.success(lead ? "Lead updated" : "Lead added", v.name.trim());
     onClose();
   });
 

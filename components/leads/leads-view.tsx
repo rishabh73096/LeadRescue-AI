@@ -21,7 +21,7 @@ import { formatInr, isOpen, leadReason, sourceLabel, statusMeta, STATUSES } from
 import { perDay, stageCounts, sum, winRate } from "@/lib/stats";
 import { notify } from "@/lib/toast";
 import { useFlashing } from "@/lib/flash";
-import { deleteLead, setLeadStatus, useLeads } from "@/services/leads";
+import { deleteLead, restoreLead, setLeadStatus, useLeads } from "@/services/leads";
 import type { Lead, LeadStatus } from "@/types/lead";
 
 type Filter = "all" | LeadStatus;
@@ -68,7 +68,7 @@ export function LeadsView() {
       id: "status",
       header: "Status",
       cell: (l) => (
-        <select aria-label={`Status for ${l.name}`} value={l.status} onChange={(e) => { setLeadStatus(l.id, e.target.value as LeadStatus); notify.success(`Marked ${statusMeta(e.target.value as LeadStatus).label}`); }} className="h-8 rounded-full bg-slate-100 px-2.5 text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-brand/40">
+        <select aria-label={`Status for ${l.name}`} value={l.status} onChange={(e) => { setLeadStatus(l.id, e.target.value as LeadStatus); notify.success(`Marked ${statusMeta(e.target.value as LeadStatus).label}`, l.name); }} className="h-8 rounded-full bg-slate-100 px-2.5 text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-brand/40">
           {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
       ),
@@ -94,7 +94,7 @@ export function LeadsView() {
       cell: (l) => (
         <div className="flex justify-end gap-1">
           <Button type="button" variant="ghost" size="icon" aria-label={`Edit ${l.name}`} onClick={() => openForm(l)}><Pencil /></Button>
-          <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${l.name}`} onClick={() => { if (window.confirm(`Delete ${l.name}?`)) { deleteLead(l.id); notify.success("Lead deleted"); } }}><Trash2 /></Button>
+          <Button type="button" variant="ghost" size="icon" aria-label={`Delete ${l.name}`} onClick={() => { deleteLead(l.id); notify.action("Lead deleted", { label: "Undo", run: () => { restoreLead(l); notify.success("Lead restored"); } }, l.name); }}><Trash2 /></Button>
         </div>
       ),
     },

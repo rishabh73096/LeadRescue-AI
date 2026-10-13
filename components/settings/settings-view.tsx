@@ -47,12 +47,7 @@ function SettingsForm({ saved }: { saved: WorkspaceSettings }) {
   const setService = (i: number, patch: Partial<WorkspaceSettings["services"][number]>) => setS((p) => ({ ...p, services: p.services.map((x, j) => (j === i ? { ...x, ...patch } : x)) }));
 
   const save = async () => {
-    try {
-      await saveSettings({ ...s, services: s.services.filter((x) => x.name.trim()).map((x) => ({ name: x.name.trim(), price: x.price.trim() })) });
-      notify.success("Settings saved");
-    } catch (error) {
-      notify.error(error);
-    }
+    await notify.promise(saveSettings({ ...s, services: s.services.filter((x) => x.name.trim()).map((x) => ({ name: x.name.trim(), price: x.price.trim() })) }), { loading: "Saving settings…", success: "Settings saved" });
   };
 
   return (

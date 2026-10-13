@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Averia_Sans_Libre, Averia_Serif_Libre, Inter, Montserrat } from "next/font/google";
 import { GlobalLoader } from "@/components/ui/global-loader";
-import { Toaster } from "@/components/ui/sonner";
+import { Toasts } from "@/components/ui/toast";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MotionProvider } from "@/components/providers/motion-provider";
 import { OfflineNotice } from "@/components/providers/offline-notice";
@@ -77,12 +77,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           disableTransitionOnChange
         >
           <MotionProvider>
-          {children}
+            {children}
+            <GlobalLoader />
+            <OfflineNotice />
+            <SwRegister />
+            {/* inside MotionProvider: the toasts animate with the same lazy motion features */}
+            <Toasts position="top-center" />
           </MotionProvider>
-          <GlobalLoader />
-          <OfflineNotice />
-          <SwRegister />
-          <Toaster closeButton position="top-right" />
         </ThemeProvider>
       </body>
     </html>

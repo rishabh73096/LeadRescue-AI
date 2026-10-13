@@ -99,6 +99,13 @@ export function addNote(id: string, text: string) {
   leads.replace(id, (l) => ({ ...l, updatedAt: stamp() }));
 }
 
+// Puts a deleted lead back (used by the Undo button). Its activity history cannot be restored.
+export function restoreLead(lead: Lead) {
+  leads.insert([lead]);
+  flash([lead.id]);
+  logActivity(lead.id, "created", "Lead restored");
+}
+
 export function deleteLead(id: string) {
   leads.remove([id]);
   // the database cascades; drop them from the local cache too
